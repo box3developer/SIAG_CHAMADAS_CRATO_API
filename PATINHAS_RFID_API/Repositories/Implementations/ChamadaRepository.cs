@@ -1,8 +1,10 @@
-﻿using Dapper;
+﻿using System.Data;
+using System.Reflection;
+using Dapper;
 using grendene_caracois_api_csharp;
 using Microsoft.Data.SqlClient;
 using PATINHAS_RFID_API.Data;
-using PATINHAS_RFID_API.Models;
+using PATINHAS_RFID_API.Integration;
 using PATINHAS_RFID_API.Models.AreaArmazenagem;
 using PATINHAS_RFID_API.Models.Atividade;
 using PATINHAS_RFID_API.Models.AtividadeRejeicao;
@@ -14,8 +16,6 @@ using PATINHAS_RFID_API.Models.Operador;
 using PATINHAS_RFID_API.Models.Pallet;
 using PATINHAS_RFID_API.Repositories.Interfaces;
 using PATINHAS_RFID_API.Utils;
-using System.Data;
-using System.Reflection;
 
 namespace PATINHAS_RFID_API.Repositories.Implementations
 {
@@ -47,191 +47,190 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
 
         public async Task<ChamadaModel> Consultar(ChamadaModel chamada)
         {
-            string sql = sqlSelect;
-            sql += "AND id_chamada = @Codigo ";
+            var chamadaEncontrada = await SiagAPI.GetChamadaById(chamada.Codigo);
 
-            var filtros = new Dictionary<string, object>();
-            filtros.Add("@Codigo", chamada.Codigo);
-            var parametros = new DynamicParameters(filtros);
-
-            var chamadaFormatada = new ChamadaModel();
-
-            using (var conexao = new SqlConnection(Global.Conexao))
+            if (chamadaEncontrada == null)
             {
-                var chamadaEncontrada = await conexao.QueryFirstOrDefaultAsync<ChamadaQuery>(sql, parametros);
+                return null;
+            }
 
-                if (chamadaEncontrada == null) return null;
+            var chamadaFormatada = new ChamadaModel
+            {
+                Codigo = chamadaEncontrada.Codigo,
+                Status = (StatusChamada)chamadaEncontrada.Status,
+                DataChamada = chamadaEncontrada.DataChamada,
+                DataRecebida = chamadaEncontrada.DataRecebida,
+                DataAtendida = chamadaEncontrada.DataRecebida,
+                DataFinalizada = chamadaEncontrada.DataFinalizada,
+                DataRejeitada = chamadaEncontrada.DataRejeitada,
+                DataSuspensa = null
+            };
 
-                chamadaFormatada = new ChamadaModel
+            if (chamadaEncontrada.PalletOrigemId != 0)
+            {
+                chamadaFormatada.PalletOrigem = new PalletModel
                 {
-                    Codigo = chamadaEncontrada.id_chamada,
-                    Status = (StatusChamada)chamadaEncontrada.fg_status,
-                    DataChamada = chamadaEncontrada.dt_chamada,
-                    DataRecebida = chamadaEncontrada.dt_recebida,
-                    DataAtendida = chamadaEncontrada.dt_atendida,
-                    DataFinalizada = chamadaEncontrada.dt_finalizada,
-                    DataRejeitada = chamadaEncontrada.dt_rejeitada,
-                    DataSuspensa = null
+                    Codigo = chamadaEncontrada.PalletOrigemId
                 };
+            }
 
-                if (chamadaEncontrada.id_palletorigem != null)
+            if (chamadaEncontrada.PalletDestinoId != 0)
+            {
+                chamadaFormatada.PalletDestino = new PalletModel
                 {
-                    chamadaFormatada.PalletOrigem = new PalletModel
-                    {
-                        Codigo = chamadaEncontrada.id_palletorigem.Value
-                    };
-                }
+                    Codigo = chamadaEncontrada.PalletDestinoId
+                };
+            }
+            if (chamadaEncontrada.PalletLeituraId != 0)
+            {
+                chamadaFormatada.PalletLeitura = new PalletModel
+                {
+                    Codigo = chamadaEncontrada.PalletLeituraId
+                };
+            }
 
-                if (chamadaEncontrada.id_palletdestino != null)
+            if (chamadaEncontrada.AreaArmazenagemOrigemId != 0)
+            {
+                chamadaFormatada.AreaArmazenagemOrigem = new AreaArmazenagemModel
                 {
-                    chamadaFormatada.PalletDestino = new PalletModel
-                    {
-                        Codigo = chamadaEncontrada.id_palletdestino.Value
-                    };
-                }
-                if (chamadaEncontrada.id_palletleitura != null)
+                    Codigo = chamadaEncontrada.AreaArmazenagemOrigemId
+                };
+            }
+            if (chamadaEncontrada.AreaArmazenagemDestinoId != 0)
+            {
+                chamadaFormatada.AreaArmazenagemDestino = new AreaArmazenagemModel
                 {
-                    chamadaFormatada.PalletLeitura = new PalletModel
-                    {
-                        Codigo = chamadaEncontrada.id_palletleitura.Value
-                    };
-                }
+                    Codigo = chamadaEncontrada.AreaArmazenagemDestinoId
+                };
+            }
+            if (chamadaEncontrada.AreaArmazenagemLeituraId != 0)
+            {
+                chamadaFormatada.AreaArmazenagemLeitura = new AreaArmazenagemModel
+                {
+                    Codigo = chamadaEncontrada.AreaArmazenagemLeituraId
+                };
+            }
+            if (chamadaEncontrada.OperadorId != 0)
+            {
+                chamadaFormatada.Operador = new OperadorModel
+                {
+                    Codigo = chamadaEncontrada.OperadorId
+                };
+            }
+            if (chamadaEncontrada.EquipamentoId != 0)
+            {
+                chamadaFormatada.Equipamento = new EquipamentoModel
+                {
+                    Codigo = chamadaEncontrada.EquipamentoId
+                };
+            }
+            if (chamadaEncontrada.AtividadeRejeicaoId != 0)
+            {
+                chamadaFormatada.AtividadeRejeicao = new AtividadeRejeicaoModel
+                {
+                    Codigo = chamadaEncontrada.AtividadeRejeicaoId
+                };
+            }
+            if (chamadaEncontrada.AtividadeId != 0)
+            {
+                chamadaFormatada.Atividade = new AtividadeModel
+                {
+                    Codigo = chamadaEncontrada.AtividadeId
+                };
+            }
 
-                if (chamadaEncontrada.id_areaarmazenagemorigem != null)
-                {
-                    chamadaFormatada.AreaArmazenagemOrigem = new AreaArmazenagemModel
-                    {
-                        Codigo = chamadaEncontrada.id_areaarmazenagemorigem.Value
-                    };
-                }
-                if (chamadaEncontrada.id_areaarmazenagemdestino != null)
-                {
-                    chamadaFormatada.AreaArmazenagemDestino = new AreaArmazenagemModel
-                    {
-                        Codigo = chamadaEncontrada.id_areaarmazenagemdestino.Value
-                    };
-                }
-                if (chamadaEncontrada.id_areaarmazenagemleitura != null)
-                {
-                    chamadaFormatada.AreaArmazenagemLeitura = new AreaArmazenagemModel
-                    {
-                        Codigo = chamadaEncontrada.id_areaarmazenagemleitura.Value
-                    };
-                }
-                if (chamadaEncontrada.id_operador != null)
-                {
-                    chamadaFormatada.Operador = new OperadorModel
-                    {
-                        Codigo = chamadaEncontrada.id_operador.Value
-                    };
-                }
-                if (chamadaEncontrada.id_equipamento != null)
-                {
-                    chamadaFormatada.Equipamento = new EquipamentoModel
-                    {
-                        Codigo = chamadaEncontrada.id_equipamento.Value
-                    };
-                }
-                if (chamadaEncontrada.id_atividaderejeicao != null)
-                {
-                    chamadaFormatada.AtividadeRejeicao = new AtividadeRejeicaoModel
-                    {
-                        Codigo = chamadaEncontrada.id_atividaderejeicao.Value
-                    };
-                }
-                if (chamadaEncontrada.id_atividade != null)
-                {
-                    chamadaFormatada.Atividade = new AtividadeModel
-                    {
-                        Codigo = chamadaEncontrada.id_atividade.Value
-                    };
-                }
-
-                if (chamadaEncontrada.id_chamadasuspensa != null)
-                {
-                    chamadaFormatada.CodigoChamadaSuspensa = chamadaEncontrada.id_chamadasuspensa.Value;
-                }
+            if (chamadaEncontrada.CodigoChamadaSuspensa != Guid.Empty)
+            {
+                chamadaFormatada.CodigoChamadaSuspensa = chamadaEncontrada.CodigoChamadaSuspensa;
             }
 
             if (chamadaFormatada.PalletOrigem != null)
             {
-                var selectPalletO = "select * from pallet where id_pallet = @Codigo";
-                using (var conexao = new SqlConnection(Global.Conexao))
+                var palletO = await SiagAPI.GetPalletById(chamadaFormatada.PalletDestino.Codigo);
+                if (palletO != null)
                 {
-                    var palletO = await conexao.QueryFirstOrDefaultAsync<PalletQuery>(selectPalletO, new
-                    {
-                        Codigo = chamadaFormatada.PalletOrigem.Codigo
-                    });
-
                     chamadaFormatada.PalletOrigem = new PalletModel
                     {
-                        Codigo = palletO.id_pallet,
-                        Identificacao = palletO.cd_identificacao
+                        Codigo = palletO.Codigo,
+                        Identificacao = palletO.Identificacao
                     };
+
+                }
+                else
+                {
+                    chamadaFormatada.PalletOrigem = null;
                 }
             }
-            else chamadaFormatada.PalletOrigem = null;
+            else
+            {
+                chamadaFormatada.PalletOrigem = null;
+            }
 
             if (chamadaFormatada.PalletDestino != null)
             {
-                var selectPalletD = "select * from pallet  where id_pallet = @Codigo";
-                using (var conexao = new SqlConnection(Global.Conexao))
+                var palletD = await SiagAPI.GetPalletById(chamadaFormatada.PalletDestino.Codigo);
+
+                if (palletD != null)
                 {
-                    var palletD = await conexao.QueryFirstOrDefaultAsync<PalletQuery>(selectPalletD, new
-                    {
-                        Codigo = chamadaFormatada.PalletDestino.Codigo
-                    });
-
-
                     chamadaFormatada.PalletDestino = new PalletModel
                     {
-                        Codigo = palletD.id_pallet,
-                        Identificacao = palletD.cd_identificacao
+                        Codigo = palletD.Codigo,
+                        Identificacao = palletD.Identificacao,
                     };
                 }
+                else
+                {
+                    chamadaFormatada.PalletDestino = null;
+                }
             }
-            else chamadaFormatada.PalletDestino = null;
+            else
+            {
+                chamadaFormatada.PalletDestino = null;
+            }
 
             if (chamadaFormatada.AreaArmazenagemOrigem != null)
             {
-                var selectAreaArmazenagemO = "select * from areaarmazenagem where id_areaarmazenagem = @Codigo";
+                var areaO = await SiagAPI.GetAreaArmazenagemByIdAsync(chamadaFormatada.AreaArmazenagemOrigem.Codigo);
 
-                using (var conexao = new SqlConnection(Global.Conexao))
+                if (areaO != null)
                 {
-                    var areaO = await conexao.QueryFirstOrDefaultAsync<AreaArmazenagemQuery>(selectAreaArmazenagemO, new
-                    {
-                        Codigo = chamadaFormatada.AreaArmazenagemOrigem.Codigo
-                    });
-
                     chamadaFormatada.AreaArmazenagemOrigem = new AreaArmazenagemModel
                     {
-                        Codigo = areaO.id_areaarmazenagem,
-                        Identificacao = areaO.cd_identificacao
+                        Codigo = areaO.Codigo,
+                        Identificacao = areaO.Identificacao
                     };
                 }
+                else
+                {
+                    chamadaFormatada.AreaArmazenagemOrigem = null;
+                }
             }
-            else chamadaFormatada.AreaArmazenagemOrigem = null;
+            else
+            {
+                chamadaFormatada.AreaArmazenagemOrigem = null;
+            }
 
             if (chamadaFormatada.AreaArmazenagemDestino != null)
             {
-                var selectAreaArmazenagemD = "select * from areaarmazenagem where id_areaarmazenagem = @Codigo";
+                var areaD = await SiagAPI.GetAreaArmazenagemByIdAsync(chamadaFormatada.AreaArmazenagemDestino.Codigo);
 
-                using (var conexao = new SqlConnection(Global.Conexao))
+                if (areaD != null)
                 {
-                    var areaD = await conexao.QueryFirstOrDefaultAsync<AreaArmazenagemQuery>(selectAreaArmazenagemD, new
-                    {
-                        Codigo = chamadaFormatada.AreaArmazenagemDestino.Codigo
-                    });
-
-
                     chamadaFormatada.AreaArmazenagemDestino = new AreaArmazenagemModel
                     {
-                        Codigo = areaD.id_areaarmazenagem,
-                        Identificacao = areaD.cd_identificacao
+                        Codigo = areaD.Codigo,
+                        Identificacao = areaD.Identificacao
                     };
                 }
+                else
+                {
+                    chamadaFormatada.AreaArmazenagemDestino = null;
+                }
             }
-            else chamadaFormatada.AreaArmazenagemDestino = null;
+            else
+            {
+                chamadaFormatada.AreaArmazenagemDestino = null;
+            }
 
             return chamadaFormatada;
         }
@@ -254,7 +253,10 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
 
             Guid? outputValido = parametros.Get<Guid?>("@id_chamada");
 
-            if (Guid.Empty == outputValido || outputValido == null) return null;
+            if (Guid.Empty == outputValido || outputValido == null)
+            {
+                return null;
+            }
             else
             {
                 chamada.Codigo = outputValido.Value;
@@ -344,7 +346,9 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
 
             }
             if (update.Count == 0)
+            {
                 throw new Exception("Nenhum parametro informado");
+            }
 
             var sql = $"UPDATE chamada set {string.Join(',', update)} WHERE id_chamada = @Codigo";
 
@@ -368,7 +372,9 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
             else
             {
                 if (chamada == null)
+                {
                     throw new Exception("Deve ser informado a chamada referente.");
+                }
 
                 var filtros = new Dictionary<string, object>();
                 filtros.Add("@id_chamada", chamada.Codigo);
@@ -392,17 +398,22 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
             }
         }
 
-        public void EditarTarefa(ChamadaTarefaModel chamadaTarefa)
+        public async void EditarTarefa(ChamadaTarefaModel chamadaTarefa)
         {
             if (chamadaTarefa == null)
+            {
                 throw new Exception("É obrigatório informar uma Chamada Tarefa!");
-            _chamadaTarefaRepository.Editar(chamadaTarefa);
+            }
+
+            await SiagAPI.UpdateChamadaTarefa(chamadaTarefa);
         }
 
         public async Task<bool> FinalizarChamada(ChamadaModel chamada)
         {
             if (chamada == null)
+            {
                 throw new Exception("Deve ser informado a chamada referente.");
+            }
 
             string sql = $"exec {sqlFinalizarChamada}";
 
@@ -427,7 +438,9 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
             int? idRejeicao = null;
 
             if (chamada.AtividadeRejeicao != null)
+            {
                 idRejeicao = chamada.AtividadeRejeicao.Codigo;
+            }
 
             string sql = $"exec {sqlRejeitarChamada}";
 

@@ -1,8 +1,11 @@
-﻿using Dapper;
+﻿using System.Data;
+using System.Text.Json;
+using Dapper;
 using grendene_caracois_api_csharp;
 using Microsoft.Data.SqlClient;
 using PATINHAS_RFID_API.Data;
 using PATINHAS_RFID_API.DTOs;
+using PATINHAS_RFID_API.Integration;
 using PATINHAS_RFID_API.Models;
 using PATINHAS_RFID_API.Models.AreaArmazenagem;
 using PATINHAS_RFID_API.Models.AtividadeRejeicao;
@@ -12,8 +15,6 @@ using PATINHAS_RFID_API.Models.EquipamentoCheckList;
 using PATINHAS_RFID_API.Models.Operador;
 using PATINHAS_RFID_API.Repositories.Interfaces;
 using PATINHAS_RFID_API.Services.Interfaces;
-using System.Data;
-using System.Text.Json;
 
 namespace PATINHAS_RFID_API.Services.Implementations
 {
@@ -51,7 +52,7 @@ namespace PATINHAS_RFID_API.Services.Implementations
 
             EquipamentoModel equipamento = await _equipamentoRepository.Consultar(identificadorEquipamento, 0);
 
-            List<AtividadeRejeicaoModel> motivos = await _atividadeRepository.ConsultarLista(null);
+            List<AtividadeRejeicaoModel> motivos = await SiagAPI.GetListaAtividadeRejeicaoAsync();
             ConfiguracaoModel config = new ConfiguracaoModel();
 
             config.MotivosRejeicao = motivos;
@@ -70,7 +71,9 @@ namespace PATINHAS_RFID_API.Services.Implementations
         public async Task<int> ConsultarPerformance(long cracha)
         {
             if (string.IsNullOrWhiteSpace(cracha.ToString()))
+            {
                 throw new Exception("Operador não informado");
+            }
 
             var filtros = new Dictionary<string, object>();
             filtros.Add("@idOperador", cracha);
@@ -87,28 +90,33 @@ namespace PATINHAS_RFID_API.Services.Implementations
 
             Int32? parPerformance = parametros.Get<Int32?>("@performance");
 
-            if (parPerformance.Value == null) return (int)HumorEficiencia.Feliz;
-            else return (int)parPerformance.Value;
+            if (parPerformance.Value == null)
+            {
+                return (int)HumorEficiencia.Feliz;
+            }
+            else
+            {
+                return (int)parPerformance.Value;
+            }
         }
 
         public async Task<bool> EnviaLocalizacaoEquipamento(string macEquipamento, string retornoEquipamento)
         {
-            string mAreaArmazenagem = string.Empty;
-
-            EquipamentoModel equipamento;
-
-            equipamento = await _equipamentoRepository.Consultar(macEquipamento, 0);
-
+            var equipamento = await _equipamentoRepository.Consultar(macEquipamento, 0);
             equipamento.Setor = await _setorRepository.Consultar(equipamento.Setor);
-            mAreaArmazenagem = equipamento.Setor.Codigo.ToString() + retornoEquipamento.Substring(0, 5) + "01" + retornoEquipamento.Substring(5, 1);
 
-            AreaArmazenagemModel areaArmazenagem = new AreaArmazenagemModel();
-            areaArmazenagem.Codigo = Convert.ToInt64(mAreaArmazenagem);
+            var mAreaArmazenagem = string.Concat(equipamento.Setor.Codigo.ToString(), retornoEquipamento.AsSpan(0, 5), "01", retornoEquipamento.AsSpan(5, 1));
+            var areaArmazenagem = new AreaArmazenagemModel
+            {
+                Codigo = Convert.ToInt64(mAreaArmazenagem)
+            };
 
-            areaArmazenagem = await _areaArmazenagemRepository.Consultar(areaArmazenagem);
+            areaArmazenagem = await SiagAPI.GetAreaArmazenagemByIdAsync(areaArmazenagem.Codigo);
 
             if (areaArmazenagem != null)
+            {
                 await _equipamentoRepository.AtualizaMovimentacao(equipamento, areaArmazenagem.Endereco);
+            }
 
             return true;
         }
@@ -139,6 +147,7 @@ namespace PATINHAS_RFID_API.Services.Implementations
             List<Dictionary<string, string>> lstChecklistGenerico = JsonSerializer.Deserialize<List<Dictionary<string, string>>>(setCheckListDTO.ChecklistResponse);
 
             foreach (Dictionary<string, string> dicionario in lstChecklistGenerico)
+            {
                 foreach (var item in dicionario)
                 {
                     EquipamentoChecklistModel checklist = new EquipamentoChecklistModel();
@@ -155,6 +164,7 @@ namespace PATINHAS_RFID_API.Services.Implementations
                     //Insere cada resposta na tabela EquipamentoChecklistOperador
                     _checkListOperadorRepository.Inserir(checklistOperador);
                 }
+            }
 
             return true;
         }

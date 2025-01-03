@@ -12,15 +12,25 @@ namespace PATINHAS_RFID_API.Models.Chamada
     {
         public Guid Codigo { get; set; }
         public PalletModel PalletOrigem { get; set; }
+        public int PalletOrigemId { get; set; }
         public PalletModel PalletDestino { get; set; }
+        public int PalletDestinoId { get; set; }
         public PalletModel PalletLeitura { get; set; }
+        public int PalletLeituraId { get; set; }
         public AreaArmazenagemModel AreaArmazenagemOrigem { get; set; }
+        public long AreaArmazenagemOrigemId { get; set; }
         public AreaArmazenagemModel AreaArmazenagemDestino { get; set; }
+        public long AreaArmazenagemDestinoId { get; set; }
         public AreaArmazenagemModel AreaArmazenagemLeitura { get; set; }
+        public long AreaArmazenagemLeituraId { get; set; }
         public OperadorModel Operador { get; set; }
+        public long OperadorId { get; set; }
         public EquipamentoModel Equipamento { get; set; }
+        public int EquipamentoId { get; set; }
         public AtividadeRejeicaoModel AtividadeRejeicao { get; set; }
+        public int AtividadeRejeicaoId { get; set; }
         public AtividadeModel Atividade { get; set; }
+        public int AtividadeId { get; set; }
         public StatusChamada Status { get; set; }
         public DateTime? DataChamada { get; set; }
         public DateTime? DataRecebida { get; set; }

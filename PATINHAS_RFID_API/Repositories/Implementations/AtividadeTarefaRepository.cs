@@ -2,6 +2,7 @@
 using grendene_caracois_api_csharp;
 using Microsoft.Data.SqlClient;
 using PATINHAS_RFID_API.Data;
+using PATINHAS_RFID_API.Integration;
 using PATINHAS_RFID_API.Models.AreaArmazenagem;
 using PATINHAS_RFID_API.Models.Atividade;
 using PATINHAS_RFID_API.Models.AtividadeRotina;
@@ -49,14 +50,22 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
                     {
 
                         if (chamada.AreaArmazenagemDestino != null)
+                        {
                             CodigoDestino = chamada.AreaArmazenagemDestino.Codigo.ToString().PadLeft(10, '0');
+                        }
                         else
+                        {
                             CodigoDestino = "";
+                        }
 
                         if (chamada.AreaArmazenagemOrigem != null)
+                        {
                             CodigoOrigem = chamada.AreaArmazenagemOrigem.Codigo.ToString().PadLeft(10, '0');
+                        }
                         else
+                        {
                             CodigoOrigem = "";
+                        }
 
                         string[] chave = item.Mensagem.Split('#');
                         for (int i = 1; i < chave.Length; i += 2)
@@ -64,38 +73,62 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
                             try
                             {
                                 if (chave[i].ToLower().Contains("caracoldest"))
+                                {
                                     item.Mensagem = item.Mensagem.Replace("#" + chave[i] + "#", CodigoDestino.Substring(4, 3));
+                                }
                                 else if (chave[i].ToLower().Contains("caracolori"))
+                                {
                                     item.Mensagem = item.Mensagem.Replace("#" + chave[i] + "#", CodigoOrigem.Substring(4, 3));
+                                }
                                 else if (chave[i].ToLower().Contains("posicaodest"))
+                                {
                                     item.Mensagem = item.Mensagem.Replace("#" + chave[i] + "#", CodigoDestino.Substring(7, 2));
+                                }
                                 else if (chave[i].ToLower().Contains("posicaoori"))
+                                {
                                     item.Mensagem = item.Mensagem.Replace("#" + chave[i] + "#", CodigoOrigem.Substring(7, 2));
+                                }
                                 else if (chave[i].ToLower().Contains("corredordes"))
+                                {
                                     item.Mensagem = item.Mensagem.Replace("#" + chave[i] + "#", CodigoDestino.Substring(2, 3));
+                                }
                                 else if (chave[i].ToLower().Contains("corredorori"))
+                                {
                                     item.Mensagem = item.Mensagem.Replace("#" + chave[i] + "#", CodigoOrigem.Substring(2, 3));
+                                }
                                 else if (chave[i].ToLower().Contains("colunades"))
+                                {
                                     item.Mensagem = item.Mensagem.Replace("#" + chave[i] + "#", CodigoDestino.Substring(5, 2));
+                                }
                                 else if (chave[i].ToLower().Contains("colunaori"))
+                                {
                                     item.Mensagem = item.Mensagem.Replace("#" + chave[i] + "#", CodigoOrigem.Substring(5, 2));
+                                }
                                 else if (chave[i].ToLower().Contains("alturades"))
+                                {
                                     item.Mensagem = item.Mensagem.Replace("#" + chave[i] + "#", CodigoDestino.Substring(7, 2));
+                                }
                                 else if (chave[i].ToLower().Contains("alturaori"))
+                                {
                                     item.Mensagem = item.Mensagem.Replace("#" + chave[i] + "#", CodigoOrigem.Substring(7, 2));
+                                }
                                 else if (chave[i].ToLower().Contains("ladodes"))
+                                {
                                     item.Mensagem = item.Mensagem.Replace("#" + chave[i] + "#", CodigoDestino.Substring(9, 1));
+                                }
                                 else if (chave[i].ToLower().Contains("ladoori"))
+                                {
                                     item.Mensagem = item.Mensagem.Replace("#" + chave[i] + "#", CodigoOrigem.Substring(9, 1));
+                                }
                                 else if (chave[i].ToLower().Contains("enderecoori"))
                                 {
-                                    areaOrigem = await _areaRepository.Consultar(chamada.AreaArmazenagemOrigem);
+                                    areaOrigem = await SiagAPI.GetAreaArmazenagemByIdAsync(chamada?.AreaArmazenagemOrigem?.Codigo ?? 0);
                                     enderecoOrigem = await _enderecoRepository.Consultar(areaOrigem.Endereco);
                                     item.Mensagem = item.Mensagem.Replace("#" + chave[i] + "#", enderecoOrigem.Descricao);
                                 }
                                 else if (chave[i].ToLower().Contains("enderecodes"))
                                 {
-                                    areaDestino = await _areaRepository.Consultar(chamada.AreaArmazenagemDestino);
+                                    areaDestino = await SiagAPI.GetAreaArmazenagemByIdAsync(chamada?.AreaArmazenagemDestino?.Codigo ?? 0);
                                     enderecoDestino = await _enderecoRepository.Consultar(areaDestino.Endereco);
                                     item.Mensagem = item.Mensagem.Replace("#" + chave[i] + "#", enderecoDestino.Descricao);
                                 }
@@ -114,9 +147,11 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
 
         public async Task<List<AtividadeTarefaModel>> ConsultarLista(AtividadeTarefaModel? atividade = null, ChamadaModel? chamada = null)
         {
-            List<AtividadeTarefaModel> atividades = await ConsultarLista(atividade);
+            List<AtividadeTarefaModel> atividades = await SiagAPI.GetListaAtividadeTarefa(atividade);
             if (chamada != null)
+            {
                 AjustaMensagens(chamada, atividades);
+            }
 
             return atividades;
         }
@@ -173,23 +208,23 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
             {
                 var atividades = (await conexao.QueryAsync<AtividadeTarefaQuery>(sql, parametros))
                     .Select(x => new AtividadeTarefaModel
-                {
-                    Codigo = x.id_tarefa,
-                    Descricao = x.nm_tarefa,
-                    Mensagem = x.nm_mensagem,
-                    Atividade = new AtividadeModel
                     {
-                        Codigo = x.id_atividade,
-                    },
-                    Sequencia = x.cd_sequencia,
-                    Recursos = (Recursos)x.fg_recurso.Value,
-                    AtividadeRotina = new AtividadeRotinaModel
-                    {
-                        Codigo = x.id_atividaderotina
-                    },
-                    PotenciaNormal = x.qt_potencianormal,
-                    PotenciaAumentada = x.qt_potenciaaumentada
-                }).ToList();
+                        Codigo = x.id_tarefa,
+                        Descricao = x.nm_tarefa,
+                        Mensagem = x.nm_mensagem,
+                        Atividade = new AtividadeModel
+                        {
+                            Codigo = x.id_atividade,
+                        },
+                        Sequencia = x.cd_sequencia,
+                        Recursos = (Recursos)x.fg_recurso.Value,
+                        AtividadeRotina = new AtividadeRotinaModel
+                        {
+                            Codigo = x.id_atividaderotina
+                        },
+                        PotenciaNormal = x.qt_potencianormal,
+                        PotenciaAumentada = x.qt_potenciaaumentada
+                    }).ToList();
 
                 return atividades;
             }
