@@ -23,20 +23,20 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
             {
                 var areaArmazenagemEncontrada = (await conexao.QueryFirstOrDefaultAsync<AreaArmazenagemQuery>(sql, new
                 {
-                    Codigo = areaArmazenagem.Codigo
+                    Codigo = areaArmazenagem.IdAreaArmazenagem
                 }));
 
                 return new AreaArmazenagemModel
                 {
-                    Codigo = areaArmazenagemEncontrada.id_areaarmazenagem,
+                    IdAreaArmazenagem = areaArmazenagemEncontrada.id_areaarmazenagem,
                     TipoArea = new TipoAreaModel { Codigo = areaArmazenagemEncontrada.id_tipoarea },
-                    Endereco = new EnderecoModel { Codigo = areaArmazenagemEncontrada.id_endereco },
+                    Endereco = new EnderecoModel { IdEndereco = areaArmazenagemEncontrada.id_endereco },
                     Agrupador = new AgrupadorAtivoModel { Codigo = areaArmazenagemEncontrada.id_agrupador },
-                    PosicaoX = areaArmazenagemEncontrada.nr_posicaox,
-                    PosicaoY = areaArmazenagemEncontrada.nr_posicaoy,
-                    Lado = areaArmazenagemEncontrada.nr_lado,
-                    Status = (StatusAreaArmazenagem)areaArmazenagemEncontrada.fg_status,
-                    Identificacao = areaArmazenagemEncontrada.cd_identificacao
+                    NrPosicaoX = areaArmazenagemEncontrada.nr_posicaox,
+                    NrPosicaoY = areaArmazenagemEncontrada.nr_posicaoy,
+                    NrLado = areaArmazenagemEncontrada.nr_lado,
+                    FgStatus = (StatusAreaArmazenagem)areaArmazenagemEncontrada.fg_status,
+                    CdIdentificacao = areaArmazenagemEncontrada.cd_identificacao
                 };
             }
         }

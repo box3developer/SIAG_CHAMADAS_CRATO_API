@@ -58,13 +58,13 @@ namespace PATINHAS_RFID_API.Services.Implementations
         public async Task<bool> IniciarTarefa(string idChamada, int idTarefa)
         {
             ChamadaModel chamada = new ChamadaModel();
-            chamada.Codigo = new Guid(idChamada);
+            chamada.IdChamada = new Guid(idChamada);
             chamada = await _chamadaRepository.Consultar(chamada);
 
             List<StatusChamada> statusAux = new List<StatusChamada>() { StatusChamada.Dependente, StatusChamada.Aguardando, StatusChamada.Recebido };
-            if (statusAux.Contains(chamada.Status))
+            if (statusAux.Contains(chamada.FgStatus))
             {
-                chamada.Status = StatusChamada.Andamento;
+                chamada.FgStatus = StatusChamada.Andamento;
                 await _chamadaRepository.EditarStatus(chamada);
             }
 
@@ -72,7 +72,7 @@ namespace PATINHAS_RFID_API.Services.Implementations
             ChamadaTarefaModel chamadaTarefa = new ChamadaTarefaModel();
             chamadaTarefa.Chamada = chamada;
             AtividadeTarefaModel atividadeTarefa = new AtividadeTarefaModel();
-            atividadeTarefa.Codigo = idTarefa;
+            atividadeTarefa.IdTarefa = idTarefa;
             chamadaTarefa.Tarefa = atividadeTarefa;
             chamadaTarefa.DataInicio = DateTime.Now;
             await SiagAPI.UpdateChamadaTarefa(chamadaTarefa);
@@ -85,7 +85,7 @@ namespace PATINHAS_RFID_API.Services.Implementations
             try
             {
                 ChamadaModel chamada = new ChamadaModel();
-                chamada.Codigo = new Guid(idChamada);
+                chamada.IdChamada = new Guid(idChamada);
                 //Consulta a chamada conforme parametro
                 chamada = await _chamadaRepository.Consultar(chamada);
 
@@ -97,7 +97,7 @@ namespace PATINHAS_RFID_API.Services.Implementations
 
                 bool leituraAlterada = false;
 
-                if (chamada != null && chamada.Status != StatusChamada.Rejeitado && chamada.Status != StatusChamada.Finalizado)
+                if (chamada != null && chamada.FgStatus != StatusChamada.Rejeitado && chamada.FgStatus != StatusChamada.Finalizado)
                 {
                     AreaArmazenagemModel areaArmazenagemLeitura = chamada.AreaArmazenagemLeitura;
                     PalletModel palletLeitura = chamada.PalletLeitura;
@@ -116,14 +116,14 @@ namespace PATINHAS_RFID_API.Services.Implementations
 
                             if (codigoArea > 0)
                             {
-                                areaArmazenagem.Codigo = codigoArea;
-                                chamada.AreaArmazenagemLeitura = await SiagAPI.GetAreaArmazenagemByIdAsync(areaArmazenagem.Codigo);
+                                areaArmazenagem.IdAreaArmazenagem = codigoArea;
+                                chamada.AreaArmazenagemLeitura = await SiagAPI.GetAreaArmazenagemByIdAsync(areaArmazenagem.IdAreaArmazenagem);
                             }
                         }
                         // verifica se houve mudança na leitura da area
                         if (((areaArmazenagemLeitura == null) && (chamada.AreaArmazenagemLeitura != null)) ||
                             ((areaArmazenagemLeitura != null) && (chamada.AreaArmazenagemLeitura == null)) ||
-                            ((areaArmazenagemLeitura != null) && (!areaArmazenagemLeitura.Codigo.Equals(chamada?.AreaArmazenagemLeitura?.Codigo ?? 0))))
+                            ((areaArmazenagemLeitura != null) && (!areaArmazenagemLeitura.IdAreaArmazenagem.Equals(chamada?.AreaArmazenagemLeitura?.IdAreaArmazenagem ?? 0))))
                         {
                             leituraAlterada = true;
                         }
@@ -136,7 +136,7 @@ namespace PATINHAS_RFID_API.Services.Implementations
                             PalletModel pallet = new PalletModel();
                             try
                             {
-                                pallet.Codigo = Convert.ToInt32(identificadorPallet.Substring(3));
+                                pallet.IdPallet = Convert.ToInt32(identificadorPallet.Substring(3));
                             }
                             catch (Exception)
                             {
@@ -146,8 +146,8 @@ namespace PATINHAS_RFID_API.Services.Implementations
                                     Mensagem = "Erro ao cadastrar o pallet " + identificadorPallet,
                                 };
                             }
-                            pallet.Status = StatusPallet.Livre;
-                            pallet.Identificacao = identificadorPallet;
+                            pallet.FgStatus = StatusPallet.Livre;
+                            pallet.CdIdentificacao = identificadorPallet;
                             pallet.QtUtilizacao = 0;
                             await _palletRepository.Inserir(pallet);
 
@@ -156,7 +156,7 @@ namespace PATINHAS_RFID_API.Services.Implementations
                         // verifica se houve mudança na leitura da area
                         if (((palletLeitura == null) && (chamada.PalletLeitura != null)) ||
                             ((palletLeitura != null) && (chamada.PalletLeitura == null)) ||
-                            ((palletLeitura != null) && (!palletLeitura.Codigo.Equals(chamada.PalletLeitura.Codigo))))
+                            ((palletLeitura != null) && (!palletLeitura.IdPallet.Equals(chamada.PalletLeitura.IdPallet))))
                         {
                             leituraAlterada = true;
                         }
@@ -169,9 +169,9 @@ namespace PATINHAS_RFID_API.Services.Implementations
                     {
                         foreach (ChamadaTarefaModel tarefa in tarefas)
                         {
-                            tarefa.Tarefa = await SiagAPI.GetAtividadeTarefaById(tarefa.Tarefa.Codigo);
+                            tarefa.Tarefa = await SiagAPI.GetAtividadeTarefaById(tarefa.Tarefa.IdTarefa);
 
-                            if (tarefa.Tarefa.Codigo == Convert.ToInt32(idTarefa))
+                            if (tarefa.Tarefa.IdTarefa == Convert.ToInt32(idTarefa))
                             {
                                 chamadaTarefa = tarefa;
                             }
@@ -182,7 +182,7 @@ namespace PATINHAS_RFID_API.Services.Implementations
                     {
                         //Consulta atividade rotina a partir da atividade tarefa
                         //AtividadeRotina atividadeRotina = new AtividadeRotina();
-                        chamadaTarefa.Tarefa.AtividadeRotina = await SiagAPI.GetAtividadeRotinaById(chamadaTarefa.Tarefa.AtividadeRotina.Codigo);
+                        chamadaTarefa.Tarefa.AtividadeRotina = await SiagAPI.GetAtividadeRotinaById(chamadaTarefa.Tarefa.AtividadeRotina.IdAtividadeRotina);
 
                         string mensagem = "";
 
@@ -198,11 +198,11 @@ namespace PATINHAS_RFID_API.Services.Implementations
                             //PROCESSO PARA APAGAR LUZ DO CARACOL USANDO API DO NODERED -- O GURGEL QUE MANDOU
                             try
                             {
-                                if (chamada.Atividade != null && chamada.Atividade.Codigo == 1)
+                                if (chamada.Atividade != null && chamada.Atividade.IdAtividade == 1)
                                 {
-                                    if (chamada.AreaArmazenagemOrigem != null && chamada.AreaArmazenagemOrigem.Codigo > 0)
+                                    if (chamada.AreaArmazenagemOrigem != null && chamada.AreaArmazenagemOrigem.IdAreaArmazenagem > 0)
                                     {
-                                        string area = chamada.AreaArmazenagemOrigem.Codigo.ToString();
+                                        string area = chamada.AreaArmazenagemOrigem.IdAreaArmazenagem.ToString();
 
                                         if (area.Length == 9)
                                         {
@@ -262,16 +262,16 @@ namespace PATINHAS_RFID_API.Services.Implementations
                                 bool executar = false;
                                 foreach (ChamadaTarefaModel item in tarefas)
                                 {
-                                    if (item.Tarefa.Codigo == chamadaTarefa.Tarefa.Codigo)
+                                    if (item.Tarefa.IdTarefa == chamadaTarefa.Tarefa.IdTarefa)
                                     {
                                         executar = true;
                                     }
                                     else if (executar)
                                     {
-                                        if (item.Tarefa.Recursos == Recursos.Automatico)
+                                        if (item.Tarefa.FgRecurso == Recursos.Automatico)
                                         {
-                                            await IniciarTarefa(chamada.Codigo.ToString(), item.Tarefa.Codigo);
-                                            MensagemWebservice msg = await EfetivaLeitura("", "", chamada.Codigo.ToString(), item.Tarefa.Codigo);
+                                            await IniciarTarefa(chamada.IdChamada.ToString(), item.Tarefa.IdTarefa);
+                                            MensagemWebservice msg = await EfetivaLeitura("", "", chamada.IdChamada.ToString(), item.Tarefa.IdTarefa);
                                             if (!msg.Retorno)
                                             {
                                                 throw new Exception(msg.Mensagem);
@@ -335,16 +335,16 @@ namespace PATINHAS_RFID_API.Services.Implementations
         {
             //Atribui o operador e o equipamento na chamada
             OperadorModel operador = new OperadorModel();
-            operador.Codigo = selecionarTarefaDTO.Cracha;
+            operador.IdOperador = selecionarTarefaDTO.Cracha;
             ChamadaModel chamada = new ChamadaModel();
             chamada.Operador = operador;
             EquipamentoModel equipamento = new EquipamentoModel();
-            equipamento.Identificador = selecionarTarefaDTO.IdentificadorEquipamento;
+            equipamento.NmIdentificador = selecionarTarefaDTO.IdentificadorEquipamento;
             equipamento = await _equipamentoRepository.Consultar(selecionarTarefaDTO.IdentificadorEquipamento);
 
-            if ((string.IsNullOrEmpty(equipamento.IP)) || (!selecionarTarefaDTO.IpEquipamento.Equals(equipamento.IP)))
+            if ((string.IsNullOrEmpty(equipamento.NmIP)) || (!selecionarTarefaDTO.IpEquipamento.Equals(equipamento.NmIP)))
             {
-                equipamento.IP = selecionarTarefaDTO.IpEquipamento; // HttpContext.Current.Request.UserHostAddress;
+                equipamento.NmIP = selecionarTarefaDTO.IpEquipamento; // HttpContext.Current.Request.UserHostAddress;
                 _equipamentoRepository.Editar(equipamento);
             }
 
@@ -355,7 +355,7 @@ namespace PATINHAS_RFID_API.Services.Implementations
             string codigoBloqueio;
             try
             {
-                codigoBloqueio = equipamento.Modelo.Codigo.ToString() + "_" + equipamento.Setor.Codigo.ToString();
+                codigoBloqueio = equipamento.EquipamentoModelo.Codigo.ToString() + "_" + equipamento.SetorTrabalho.Codigo.ToString();
             }
             catch
             {
@@ -388,9 +388,9 @@ namespace PATINHAS_RFID_API.Services.Implementations
                     List<AtividadeTarefaModel> atividades;
 
                     //Consulta detalhes da atividade relacionada com o Chamado
-                    if (chamadaAtual.Atividade != null && chamadaAtual.Atividade.Codigo != 0)
+                    if (chamadaAtual.Atividade != null && chamadaAtual.Atividade.IdAtividade != 0)
                     {
-                        chamadaAtual.Atividade = SiagAPI.GetAtividadeById(chamadaAtual.Atividade.Codigo).Result;
+                        chamadaAtual.Atividade = SiagAPI.GetAtividadeById(chamadaAtual.Atividade.IdAtividade).Result;
                         AtividadeTarefaModel atividadeTarefa = new AtividadeTarefaModel();
                         atividadeTarefa.Atividade = chamadaAtual.Atividade;
 
@@ -408,26 +408,26 @@ namespace PATINHAS_RFID_API.Services.Implementations
                     chamadaAtual.Equipamento = equipamento;
                     chamadaAtual.Operador = operador;
 
-                    if (chamadaAtual.Status == StatusChamada.Aguardando)
+                    if (chamadaAtual.FgStatus == StatusChamada.Aguardando)
                     {
                         ChamadaModel chamadaConf = new ChamadaModel();
                         try
                         {
                             chamadaConf = _chamadaRepository.Consultar(chamadaAtual).Result;
-                            if (chamadaConf.Status == StatusChamada.Aguardando)
+                            if (chamadaConf.FgStatus == StatusChamada.Aguardando)
                             {
-                                chamadaAtual.Status = StatusChamada.Recebido;
+                                chamadaAtual.FgStatus = StatusChamada.Recebido;
                                 _chamadaRepository.AtribuirChamada(chamadaAtual);
 
                                 // Altera a localização atual do equipamento que recebeu a chamada
-                                if ((chamadaAtual.AreaArmazenagemOrigem != null) && (chamadaAtual.AreaArmazenagemOrigem.Codigo > 0))
+                                if ((chamadaAtual.AreaArmazenagemOrigem != null) && (chamadaAtual.AreaArmazenagemOrigem.IdAreaArmazenagem > 0))
                                 {
                                     AreaArmazenagemModel areaarmazenagemAux = new AreaArmazenagemModel();
-                                    areaarmazenagemAux = SiagAPI.GetAreaArmazenagemByIdAsync(chamadaAtual.AreaArmazenagemOrigem.Codigo).Result;
+                                    areaarmazenagemAux = SiagAPI.GetAreaArmazenagemByIdAsync(chamadaAtual.AreaArmazenagemOrigem.IdAreaArmazenagem).Result;
                                     if (areaarmazenagemAux != null)
                                     {
                                         EnderecoModel endereco = new EnderecoModel();
-                                        endereco.Codigo = areaarmazenagemAux.Endereco.Codigo;
+                                        endereco.IdEndereco = areaarmazenagemAux.Endereco.IdEndereco;
                                         _equipamentoRepository.AtualizaMovimentacao(equipamento, endereco);
                                     }
                                 }
@@ -449,13 +449,13 @@ namespace PATINHAS_RFID_API.Services.Implementations
                     bool refazerConsulta = false;
                     foreach (AtividadeTarefaModel tarefa in atividades)
                     {
-                        if (tarefa.Recursos == Recursos.Automatico)
+                        if (tarefa.FgRecurso == Recursos.Automatico)
                         {
                             if (executar)
                             {
                                 executar = false; // a efetivaLeitura() executa recursivamente as tarefas automáticas seguintes
-                                IniciarTarefa(chamadaAtual.Codigo.ToString(), tarefa.Codigo);
-                                EfetivaLeitura("", "", chamadaAtual.Codigo.ToString(), tarefa.Codigo);
+                                IniciarTarefa(chamadaAtual.IdChamada.ToString(), tarefa.IdTarefa);
+                                EfetivaLeitura("", "", chamadaAtual.IdChamada.ToString(), tarefa.IdTarefa);
                                 refazerConsulta = true;
                             }
                         }
@@ -473,7 +473,7 @@ namespace PATINHAS_RFID_API.Services.Implementations
                         _atividadeTarefaRepository.AjustaMensagens(chamadaAtual, completa.Tarefas);
                     }
 
-                    completa.Codigo = chamadaAtual.Codigo;
+                    completa.IdChamada = chamadaAtual.IdChamada;
                     completa.PalletOrigem = chamadaAtual.PalletOrigem;
                     completa.PalletDestino = chamadaAtual.PalletDestino;
                     completa.PalletLeitura = chamadaAtual.PalletLeitura;
@@ -484,12 +484,12 @@ namespace PATINHAS_RFID_API.Services.Implementations
                     completa.Equipamento = chamadaAtual.Equipamento;
                     completa.AtividadeRejeicao = chamadaAtual.AtividadeRejeicao;
                     completa.Atividade = chamadaAtual.Atividade;
-                    completa.Status = chamadaAtual.Status;
-                    completa.DataChamada = chamadaAtual.DataChamada;
-                    completa.DataRecebida = chamadaAtual.DataRecebida;
-                    completa.DataAtendida = chamadaAtual.DataAtendida;
-                    completa.DataFinalizada = chamadaAtual.DataFinalizada;
-                    completa.DataRejeitada = chamadaAtual.DataRejeitada;
+                    completa.FgStatus = chamadaAtual.FgStatus;
+                    completa.DtChamada = chamadaAtual.DtChamada;
+                    completa.DtRecebida = chamadaAtual.DtRecebida;
+                    completa.DtAtendida = chamadaAtual.DtAtendida;
+                    completa.DtFinalizada = chamadaAtual.DtFinalizada;
+                    completa.DtRejeitada = chamadaAtual.DtRejeitada;
 
                     // testa se existe alguma tarefa pendente na chamada
                     if (completa.Tarefas.Count == 0)
@@ -527,17 +527,17 @@ namespace PATINHAS_RFID_API.Services.Implementations
             {
                 //Se código da chamada for nulo rejeita todas chamdas do operador
                 OperadorModel operador = new OperadorModel();
-                operador.Codigo = cracha;
+                operador.IdOperador = cracha;
                 chamada.Operador = operador;
 
-                chamada.Codigo = new Guid(idChamada);
+                chamada.IdChamada = new Guid(idChamada);
                 chamada = await _chamadaRepository.Consultar(chamada);
 
-                chamada.Atividade = await SiagAPI.GetAtividadeById(chamada.Atividade.Codigo);
-                if (chamada.Atividade.PermiteRejeitar == RejeicaoTarefa.Permite)
+                chamada.Atividade = await SiagAPI.GetAtividadeById(chamada.Atividade.IdAtividade);
+                if (chamada.Atividade.FgPermiteRejeitar == RejeicaoTarefa.Permite)
                 {
                     chamada.AtividadeRejeicao = new AtividadeRejeicaoModel();
-                    chamada.AtividadeRejeicao.Codigo = idMotivo;
+                    chamada.AtividadeRejeicao.IdAtividadeRejeicao = idMotivo;
 
                     return await _chamadaRepository.RejeitarChamada(chamada);
                 }

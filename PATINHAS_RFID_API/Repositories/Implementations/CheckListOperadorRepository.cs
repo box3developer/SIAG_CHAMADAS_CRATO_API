@@ -18,9 +18,9 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
             {
                 var qtdLinhas = await conexao.ExecuteAsync(sqlInsert, new
                 {
-                    Equipamento = checklistOperador.Equipamento.Codigo,
-                    Operador = checklistOperador.Operador.Codigo,
-                    Checklist = checklistOperador.Checklist.Codigo,
+                    Equipamento = checklistOperador.Equipamento.IdEquipamento,
+                    Operador = checklistOperador.Operador.IdOperador,
+                    Checklist = checklistOperador.Checklist.IdEquipamentoChecklist,
                     Resposta = checklistOperador.Resposta,
                     Data = checklistOperador.Data,
                 });

@@ -2,25 +2,29 @@
 using PATINHAS_RFID_API.Models.Endereco;
 using PATINHAS_RFID_API.Models.Operador;
 
-namespace PATINHAS_RFID_API.Models.Equipamento
+namespace PATINHAS_RFID_API.Models.Equipamento;
+
+public class EquipamentoModel
 {
-    public class EquipamentoModel
-    {
-        public int Codigo { get; set; }
-        public EquipamentoModeloModel Modelo { get; set; }
-        public SetorModel Setor { get; set; }
-        public OperadorModel Operador { get; set; }
-        public string Descricao { get; set; }
-        public string DescricaoAbreviada { get; set; }
-        public string Identificador { get; set; }
-        public StatusEquipamento Status { get; set; }
-        public DateTime? DataInclusao { get; set; }
-        public DateTime? DataManutencao { get; set; }
-        public DateTime? DataUltimaLeitura { get; set; }
-        public EnderecoModel EnderecoTrabalho { get; set; }
-        public string IP { get; set; }
-        public Ativo StatusTrocaCaracol { get; set; }
-        public string UltimaLeitura { get; set; }
-        public string observacao { get; set; }
-    }
+    public int IdEquipamento { get; set; }
+    public int IdEquipamentoModelo { get; set; }
+    public EquipamentoModeloModel? EquipamentoModelo { get; set; }
+    public int? IdSetorTrabalho { get; set; }
+    public SetorModel? SetorTrabalho { get; set; }
+    public int IdOperador { get; set; }
+    public OperadorModel? Operador { get; set; }
+    public string NmEquipamento { get; set; } = string.Empty;
+    public string NmAbreviadoEquipamento { get; set; } = string.Empty;
+    public string NmIdentificador { get; set; } = string.Empty;
+    public StatusEquipamento FgStatus { get; set; }
+    public DateTime? DtInclusao { get; set; }
+    public DateTime? DtManutencao { get; set; }
+    public DateTime? DtUltimaLeitura { get; set; }
+    public int? IdEndereco { get; set; }
+    public EnderecoModel? Endereco { get; set; }
+    public string NmIP { get; set; } = string.Empty;
+    public Ativo FgStatusTrocaCaracol { get; set; }
+    public string CdLeituraPendente { get; set; } = string.Empty;
+    public string CdUltimaLeitura { get; set; } = string.Empty;
+    public string Observacao { get; set; } = string.Empty;
 }

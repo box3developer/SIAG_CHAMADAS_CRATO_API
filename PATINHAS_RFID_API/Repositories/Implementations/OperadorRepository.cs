@@ -24,7 +24,7 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
                     String query = sqlSelect + "AND id_operador = @Codigo ";
                     operadorEncontrado = await conexao.QueryFirstOrDefaultAsync<OperadorQuery>(query, new
                     {
-                        Codigo = operador.Codigo,
+                        Codigo = operador.IdOperador,
                     });
                 }
             } else
@@ -43,15 +43,15 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
 
             return new OperadorModel
             {
-                Codigo = operadorEncontrado.id_operador,
-                Descricao = operadorEncontrado.nm_operador,
-                DataLogin = operadorEncontrado.dt_login,
-                CPF = operadorEncontrado.nm_cpf,
-                Localidade = (Estabelecimentos)operadorEncontrado.nr_localidade,
-                FuncaoOperador = (FuncaoOperador)operadorEncontrado.fg_funcao,
+                IdOperador = operadorEncontrado.id_operador,
+                NmOperador = operadorEncontrado.nm_operador,
+                DtLogin = operadorEncontrado.dt_login,
+                NmCpf = operadorEncontrado.nm_cpf,
+                NrLocalidade = (Estabelecimentos)operadorEncontrado.nr_localidade,
+                FgFuncao = (FuncaoOperador)operadorEncontrado.fg_funcao,
                 Responsavel = new OperadorModel
                 {
-                    Codigo = operadorEncontrado.id_responsavel
+                    IdOperador = operadorEncontrado.id_responsavel
                 },
             };
         }

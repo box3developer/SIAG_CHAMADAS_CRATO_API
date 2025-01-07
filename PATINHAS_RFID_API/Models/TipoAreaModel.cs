@@ -1,9 +1,7 @@
-﻿namespace PATINHAS_RFID_API.Models
-{
-    public class TipoAreaModel
-    {
+﻿namespace PATINHAS_RFID_API.Models;
 
-        public int Codigo { get; set; }
-        public string Descricao { get; set; }
-    }
+public class TipoAreaModel
+{
+    public int Codigo { get; set; }
+    public string Descricao { get; set; } = string.Empty;
 }

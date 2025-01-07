@@ -20,17 +20,17 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
             {
                 var enderecoEncontrado = await conexao.QueryFirstOrDefaultAsync<EnderecoQuery>(sql, new
                 {
-                    Codigo = endereco.Codigo,
+                    Codigo = endereco.IdEndereco,
                 });
 
                 return new EnderecoModel
                 {
-                    Codigo = enderecoEncontrado.id_endereco,
-                    Regiao = new RegiaoModel
+                    IdEndereco = enderecoEncontrado.id_endereco,
+                    RegiaoTrabalho = new RegiaoModel
                     {
                         Codigo = enderecoEncontrado.id_regiaotrabalho,
                     },
-                    Setor = new SetorModel
+                    SetorTrabalho = new SetorModel
                     {
                         Codigo = enderecoEncontrado.id_setortrabalho
                     },
@@ -38,11 +38,11 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
                     {
                         Codigo = enderecoEncontrado.id_tipoendereco,
                     },
-                    Descricao = enderecoEncontrado.nm_endereco,
-                    EstoqueMinimo = enderecoEncontrado.qt_estoqueminimo,
-                    EstoqueMaximo = enderecoEncontrado.qt_estoquemaximo,
-                    Status = (StatusEndereco)enderecoEncontrado.fg_status,
-                    TipoPreenchimento = (TipoPreenchimento)enderecoEncontrado.tp_preenchimento,
+                    NmEndereco = enderecoEncontrado.nm_endereco,
+                    QtEstoqueMinimo = enderecoEncontrado.qt_estoqueminimo,
+                    QtEstoqueMaximo = enderecoEncontrado.qt_estoquemaximo,
+                    FgStatus = (StatusEndereco)enderecoEncontrado.fg_status,
+                    TpPreenchimento = (TipoPreenchimento)enderecoEncontrado.tp_preenchimento,
                 };
             }
         }

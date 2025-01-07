@@ -46,7 +46,7 @@ namespace PATINHAS_RFID_API.Services.Implementations
         public async Task<ConfiguracaoModel> ConsultarConfiguracoes(long cracha, string identificadorEquipamento)
         {
             OperadorModel operador = new OperadorModel();
-            operador.Codigo = cracha;
+            operador.IdOperador = cracha;
             ChamadaModel chamada = new ChamadaModel();
             chamada.Operador = operador;
 
@@ -63,7 +63,7 @@ namespace PATINHAS_RFID_API.Services.Implementations
             config.TamanhoCodigoPallet = (int)Configuracoes.QtdeCaracteresCodBarraPallet;
             config.TempoAquisicaoTarefas = 5000;    //Fixo por enquanto
             config.TempoEstabilizacaoLeitura = 1000;//Fixo por enquanto
-            config.ModeloEquipamento = equipamento.Modelo;
+            config.ModeloEquipamento = equipamento.EquipamentoModelo;
 
             return config;
         }
@@ -103,15 +103,15 @@ namespace PATINHAS_RFID_API.Services.Implementations
         public async Task<bool> EnviaLocalizacaoEquipamento(string macEquipamento, string retornoEquipamento)
         {
             var equipamento = await _equipamentoRepository.Consultar(macEquipamento, 0);
-            equipamento.Setor = await _setorRepository.Consultar(equipamento.Setor);
+            equipamento.SetorTrabalho = await _setorRepository.Consultar(equipamento.SetorTrabalho);
 
-            var mAreaArmazenagem = string.Concat(equipamento.Setor.Codigo.ToString(), retornoEquipamento.AsSpan(0, 5), "01", retornoEquipamento.AsSpan(5, 1));
+            var mAreaArmazenagem = string.Concat(equipamento.SetorTrabalho.Codigo.ToString(), retornoEquipamento.AsSpan(0, 5), "01", retornoEquipamento.AsSpan(5, 1));
             var areaArmazenagem = new AreaArmazenagemModel
             {
-                Codigo = Convert.ToInt64(mAreaArmazenagem)
+                IdAreaArmazenagem = Convert.ToInt64(mAreaArmazenagem)
             };
 
-            areaArmazenagem = await SiagAPI.GetAreaArmazenagemByIdAsync(areaArmazenagem.Codigo);
+            areaArmazenagem = await SiagAPI.GetAreaArmazenagemByIdAsync(areaArmazenagem.IdAreaArmazenagem);
 
             if (areaArmazenagem != null)
             {
@@ -124,7 +124,7 @@ namespace PATINHAS_RFID_API.Services.Implementations
         public async Task<List<EquipamentoChecklistModel>> GetCheckList(string identificadorEquipamento)
         {
             EquipamentoModel equipamento = new EquipamentoModel();
-            equipamento.Identificador = identificadorEquipamento;
+            equipamento.NmIdentificador = identificadorEquipamento;
 
             List<EquipamentoChecklistModel> lstChecklist = await _checkListRepository.ConsultarListaPorEquipamento(equipamento);
 
@@ -134,7 +134,7 @@ namespace PATINHAS_RFID_API.Services.Implementations
         public async Task<bool> SetCheckList(SetCheckListDTO setCheckListDTO)
         {
             EquipamentoModel equipamento = new EquipamentoModel();
-            equipamento.Identificador = setCheckListDTO.IdentificadorEquipamento;
+            equipamento.NmIdentificador = setCheckListDTO.IdentificadorEquipamento;
 
             //Busca equipamento pelo identificador
             List<EquipamentoModel> lstEquipamento = await _equipamentoRepository.ConsultarLista(equipamento);
@@ -142,7 +142,7 @@ namespace PATINHAS_RFID_API.Services.Implementations
             equipamento = lstEquipamento[0];
 
             OperadorModel operador = new OperadorModel();
-            operador.Codigo = setCheckListDTO.CodOperador;
+            operador.IdOperador = setCheckListDTO.CodOperador;
             //Deserializa JSon como uma lista de dicionários, cada dicionário com código do checklist e valor da resposta (0 ou 1)
             List<Dictionary<string, string>> lstChecklistGenerico = JsonSerializer.Deserialize<List<Dictionary<string, string>>>(setCheckListDTO.ChecklistResponse);
 
@@ -151,7 +151,7 @@ namespace PATINHAS_RFID_API.Services.Implementations
                 foreach (var item in dicionario)
                 {
                     EquipamentoChecklistModel checklist = new EquipamentoChecklistModel();
-                    checklist.Codigo = Convert.ToInt32(item.Key);
+                    checklist.IdEquipamentoChecklist = Convert.ToInt32(item.Key);
 
                     //Monta objeto ChecklistOperador
                     EquipamentoChecklistOperadorModel checklistOperador = new EquipamentoChecklistOperadorModel();

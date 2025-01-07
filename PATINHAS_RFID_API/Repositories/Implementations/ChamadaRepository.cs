@@ -47,7 +47,7 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
 
         public async Task<ChamadaModel> Consultar(ChamadaModel chamada)
         {
-            var chamadaEncontrada = await SiagAPI.GetChamadaById(chamada.Codigo);
+            var chamadaEncontrada = await SiagAPI.GetChamadaById(chamada.IdChamada);
 
             if (chamadaEncontrada == null)
             {
@@ -56,103 +56,103 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
 
             var chamadaFormatada = new ChamadaModel
             {
-                Codigo = chamadaEncontrada.Codigo,
-                Status = (StatusChamada)chamadaEncontrada.Status,
-                DataChamada = chamadaEncontrada.DataChamada,
-                DataRecebida = chamadaEncontrada.DataRecebida,
-                DataAtendida = chamadaEncontrada.DataRecebida,
-                DataFinalizada = chamadaEncontrada.DataFinalizada,
-                DataRejeitada = chamadaEncontrada.DataRejeitada,
-                DataSuspensa = null
+                IdChamada = chamadaEncontrada.IdChamada,
+                FgStatus = (StatusChamada)chamadaEncontrada.FgStatus,
+                DtChamada = chamadaEncontrada.DtChamada,
+                DtRecebida = chamadaEncontrada.DtRecebida,
+                DtAtendida = chamadaEncontrada.DtRecebida,
+                DtFinalizada = chamadaEncontrada.DtFinalizada,
+                DtRejeitada = chamadaEncontrada.DtRejeitada,
+                DtSuspensa = null
             };
 
-            if (chamadaEncontrada.PalletOrigemId != 0)
+            if (chamadaEncontrada.IdPalletOrigem != 0)
             {
                 chamadaFormatada.PalletOrigem = new PalletModel
                 {
-                    Codigo = chamadaEncontrada.PalletOrigemId
+                    IdPallet = chamadaEncontrada.IdPalletOrigem
                 };
             }
 
-            if (chamadaEncontrada.PalletDestinoId != 0)
+            if (chamadaEncontrada.IdPalletDestino != 0)
             {
                 chamadaFormatada.PalletDestino = new PalletModel
                 {
-                    Codigo = chamadaEncontrada.PalletDestinoId
+                    IdPallet = chamadaEncontrada.IdPalletDestino
                 };
             }
-            if (chamadaEncontrada.PalletLeituraId != 0)
+            if (chamadaEncontrada.IdPalletLeitura != 0)
             {
                 chamadaFormatada.PalletLeitura = new PalletModel
                 {
-                    Codigo = chamadaEncontrada.PalletLeituraId
+                    IdPallet = chamadaEncontrada.IdPalletLeitura
                 };
             }
 
-            if (chamadaEncontrada.AreaArmazenagemOrigemId != 0)
+            if (chamadaEncontrada.IdAreaArmazenagemOrigem != 0)
             {
                 chamadaFormatada.AreaArmazenagemOrigem = new AreaArmazenagemModel
                 {
-                    Codigo = chamadaEncontrada.AreaArmazenagemOrigemId
+                    IdAreaArmazenagem = chamadaEncontrada.IdAreaArmazenagemOrigem
                 };
             }
-            if (chamadaEncontrada.AreaArmazenagemDestinoId != 0)
+            if (chamadaEncontrada.IdAreaArmazenagemDestino != 0)
             {
                 chamadaFormatada.AreaArmazenagemDestino = new AreaArmazenagemModel
                 {
-                    Codigo = chamadaEncontrada.AreaArmazenagemDestinoId
+                    IdAreaArmazenagem = chamadaEncontrada.IdAreaArmazenagemDestino
                 };
             }
-            if (chamadaEncontrada.AreaArmazenagemLeituraId != 0)
+            if (chamadaEncontrada.IdAreaArmazenagemLeitura != 0)
             {
                 chamadaFormatada.AreaArmazenagemLeitura = new AreaArmazenagemModel
                 {
-                    Codigo = chamadaEncontrada.AreaArmazenagemLeituraId
+                    IdAreaArmazenagem = chamadaEncontrada.IdAreaArmazenagemLeitura
                 };
             }
-            if (chamadaEncontrada.OperadorId != 0)
+            if (chamadaEncontrada.IdOperador != 0)
             {
                 chamadaFormatada.Operador = new OperadorModel
                 {
-                    Codigo = chamadaEncontrada.OperadorId
+                    IdOperador = chamadaEncontrada.IdOperador
                 };
             }
-            if (chamadaEncontrada.EquipamentoId != 0)
+            if (chamadaEncontrada.IdEquipamento != 0)
             {
                 chamadaFormatada.Equipamento = new EquipamentoModel
                 {
-                    Codigo = chamadaEncontrada.EquipamentoId
+                    IdEquipamento = chamadaEncontrada.IdEquipamento
                 };
             }
-            if (chamadaEncontrada.AtividadeRejeicaoId != 0)
+            if (chamadaEncontrada.IdAtividadeRejeicao != 0)
             {
                 chamadaFormatada.AtividadeRejeicao = new AtividadeRejeicaoModel
                 {
-                    Codigo = chamadaEncontrada.AtividadeRejeicaoId
+                    IdAtividadeRejeicao = chamadaEncontrada.IdAtividadeRejeicao
                 };
             }
-            if (chamadaEncontrada.AtividadeId != 0)
+            if (chamadaEncontrada.IdAtividade != 0)
             {
                 chamadaFormatada.Atividade = new AtividadeModel
                 {
-                    Codigo = chamadaEncontrada.AtividadeId
+                    IdAtividade = chamadaEncontrada.IdAtividade
                 };
             }
 
-            if (chamadaEncontrada.CodigoChamadaSuspensa != Guid.Empty)
+            if (chamadaEncontrada.IdChamadaSuspensa != Guid.Empty)
             {
-                chamadaFormatada.CodigoChamadaSuspensa = chamadaEncontrada.CodigoChamadaSuspensa;
+                chamadaFormatada.IdChamadaSuspensa = chamadaEncontrada.IdChamadaSuspensa;
             }
 
             if (chamadaFormatada.PalletOrigem != null)
             {
-                var palletO = await SiagAPI.GetPalletById(chamadaFormatada.PalletDestino.Codigo);
+                var palletO = await SiagAPI.GetPalletById(chamadaFormatada.PalletDestino.IdPallet);
                 if (palletO != null)
                 {
                     chamadaFormatada.PalletOrigem = new PalletModel
                     {
-                        Codigo = palletO.Codigo,
-                        Identificacao = palletO.Identificacao
+                        IdPallet = palletO.IdPallet,
+                        CdIdentificacao = palletO.CdIdentificacao
                     };
 
                 }
@@ -168,14 +168,14 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
 
             if (chamadaFormatada.PalletDestino != null)
             {
-                var palletD = await SiagAPI.GetPalletById(chamadaFormatada.PalletDestino.Codigo);
+                var palletD = await SiagAPI.GetPalletById(chamadaFormatada.PalletDestino.IdPallet);
 
                 if (palletD != null)
                 {
                     chamadaFormatada.PalletDestino = new PalletModel
                     {
-                        Codigo = palletD.Codigo,
-                        Identificacao = palletD.Identificacao,
+                        IdPallet = palletD.IdPallet,
+                        CdIdentificacao = palletD.CdIdentificacao,
                     };
                 }
                 else
@@ -190,14 +190,14 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
 
             if (chamadaFormatada.AreaArmazenagemOrigem != null)
             {
-                var areaO = await SiagAPI.GetAreaArmazenagemByIdAsync(chamadaFormatada.AreaArmazenagemOrigem.Codigo);
+                var areaO = await SiagAPI.GetAreaArmazenagemByIdAsync(chamadaFormatada.AreaArmazenagemOrigem.IdAreaArmazenagem);
 
                 if (areaO != null)
                 {
                     chamadaFormatada.AreaArmazenagemOrigem = new AreaArmazenagemModel
                     {
-                        Codigo = areaO.Codigo,
-                        Identificacao = areaO.Identificacao
+                        IdAreaArmazenagem = areaO.IdAreaArmazenagem,
+                        CdIdentificacao = areaO.CdIdentificacao
                     };
                 }
                 else
@@ -212,14 +212,14 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
 
             if (chamadaFormatada.AreaArmazenagemDestino != null)
             {
-                var areaD = await SiagAPI.GetAreaArmazenagemByIdAsync(chamadaFormatada.AreaArmazenagemDestino.Codigo);
+                var areaD = await SiagAPI.GetAreaArmazenagemByIdAsync(chamadaFormatada.AreaArmazenagemDestino.IdAreaArmazenagem);
 
                 if (areaD != null)
                 {
                     chamadaFormatada.AreaArmazenagemDestino = new AreaArmazenagemModel
                     {
-                        Codigo = areaD.Codigo,
-                        Identificacao = areaD.Identificacao
+                        IdAreaArmazenagem = areaD.IdAreaArmazenagem,
+                        CdIdentificacao = areaD.CdIdentificacao
                     };
                 }
                 else
@@ -238,8 +238,8 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
         public async Task<ChamadaModel?> SelecionaChamadaEquipamento(ChamadaModel chamada)
         {
             var filtros = new Dictionary<string, object>();
-            filtros.Add("@id_operador", chamada.Operador.Codigo);
-            filtros.Add("@id_equipamento", chamada.Equipamento.Codigo);
+            filtros.Add("@id_operador", chamada.Operador.IdOperador);
+            filtros.Add("@id_equipamento", chamada.Equipamento.IdEquipamento);
 
             var parametros = new DynamicParameters(filtros);
             parametros.Add("@id_chamada", dbType: DbType.Guid, direction: ParameterDirection.Output);
@@ -259,7 +259,7 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
             }
             else
             {
-                chamada.Codigo = outputValido.Value;
+                chamada.IdChamada = outputValido.Value;
                 return await Consultar(chamada);
             }
         }
@@ -274,10 +274,10 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
             {
                 var equipamentoAtualizado = await conexao.ExecuteAsync(sql, new
                 {
-                    Codigo = chamada.Codigo,
-                    Operador = chamada.Operador.Codigo,
-                    Equipamento = chamada.Equipamento.Codigo,
-                    Status = chamada.Status,
+                    Codigo = chamada.IdChamada,
+                    Operador = chamada.Operador.IdOperador,
+                    Equipamento = chamada.Equipamento.IdEquipamento,
+                    Status = chamada.FgStatus,
                     StatusRejeitada = StatusChamada.Rejeitado
                 });
             }
@@ -286,7 +286,7 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
         public async Task EditarStatus(ChamadaModel chamada)
         {
             string sql = "UPDATE chamada SET fg_status = @Status ";
-            switch (chamada.Status)
+            switch (chamada.FgStatus)
             {
                 case StatusChamada.Recebido:
                     sql += ", dt_recebida = GETDATE() ";
@@ -302,8 +302,8 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
             {
                 var equipamentoAtualizado = await conexao.ExecuteAsync(sql, new
                 {
-                    Codigo = chamada.Codigo,
-                    Status = chamada.Status,
+                    Codigo = chamada.IdChamada,
+                    Status = chamada.FgStatus,
                 });
             }
         }
@@ -330,18 +330,18 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
         {
             var filtros = new Dictionary<string, object>();
 
-            filtros.Add("@Codigo", chamada.Codigo);
+            filtros.Add("@Codigo", chamada.IdChamada);
 
             var update = new List<string>();
 
             if (chamada.PalletLeitura != null)
             {
-                filtros.Add("@PalletLeitura", chamada.PalletLeitura.Codigo);
+                filtros.Add("@PalletLeitura", chamada.PalletLeitura.IdPallet);
                 update.Add("id_palletleitura = @PalletLeitura");
             }
             if (chamada.AreaArmazenagemLeitura != null)
             {
-                filtros.Add("@AreaArmazenagemLeitura", chamada.AreaArmazenagemLeitura.Codigo);
+                filtros.Add("@AreaArmazenagemLeitura", chamada.AreaArmazenagemLeitura.IdAreaArmazenagem);
                 update.Add("id_areaarmazenagemleitura = @AreaArmazenagemLeitura");
 
             }
@@ -363,9 +363,9 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
 
         public bool ValidaLeitura(ChamadaModel chamada, AtividadeRotinaModel atividadeRotina, out string mensagem)
         {
-            if (atividadeRotina.Tipo == TipoRotina.MetodoClasse)
+            if (atividadeRotina.FgTipo == TipoRotina.MetodoClasse)
             {
-                MensagemWebservice? msg = (MensagemWebservice)typeof(IChamadaAtivaRepository).GetMethod(atividadeRotina.Procedure).Invoke(_chamadaTarefaRepository, new[] { chamada });
+                MensagemWebservice? msg = (MensagemWebservice)typeof(IChamadaAtivaRepository).GetMethod(atividadeRotina.NmProcedure).Invoke(_chamadaTarefaRepository, new[] { chamada });
                 mensagem = msg.Mensagem;
                 return msg.Retorno;
             }
@@ -377,13 +377,13 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
                 }
 
                 var filtros = new Dictionary<string, object>();
-                filtros.Add("@id_chamada", chamada.Codigo);
+                filtros.Add("@id_chamada", chamada.IdChamada);
 
                 var parametros = new DynamicParameters(filtros);
                 parametros.Add("@mensagem", dbType: DbType.String, direction: ParameterDirection.Output, size: 1000);
                 parametros.Add("@RetVal", dbType: DbType.Int32, direction: ParameterDirection.ReturnValue);
 
-                var query = $"{atividadeRotina.Procedure}";
+                var query = $"{atividadeRotina.NmProcedure}";
 
                 using (var conexao = new SqlConnection(Global.Conexao))
                 {
@@ -421,7 +421,7 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
             {
                 var resultado = await conexao.ExecuteAsync(sql, new
                 {
-                    idChamada = chamada.Codigo,
+                    idChamada = chamada.IdChamada,
                 });
 
                 return true;
@@ -439,7 +439,7 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
 
             if (chamada.AtividadeRejeicao != null)
             {
-                idRejeicao = chamada.AtividadeRejeicao.Codigo;
+                idRejeicao = chamada.AtividadeRejeicao.IdAtividadeRejeicao;
             }
 
             string sql = $"exec {sqlRejeitarChamada}";
@@ -448,7 +448,7 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
             {
                 var resultado = await conexao.ExecuteAsync(sql, new
                 {
-                    idChamada = chamada.Codigo,
+                    idChamada = chamada.IdChamada,
                     idRejeicao = idRejeicao,
                 });
 
@@ -464,7 +464,7 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
             {
                 var linhas = await conexao.ExecuteAsync(query, new
                 {
-                    id_chamada = chamada.Codigo,
+                    id_chamada = chamada.IdChamada,
                 });
             }
         }
@@ -477,65 +477,65 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
 
             if (chamada != null)
             {
-                if ((chamada.Codigo != null) && (chamada.Codigo != Guid.Empty))
+                if ((chamada.IdChamada != null) && (chamada.IdChamada != Guid.Empty))
                 {
                     sql += " AND id_chamada = @Codigo ";
-                    filtros.Add("@Codigo", chamada.Codigo);
+                    filtros.Add("@Codigo", chamada.IdChamada);
                 }
-                if ((chamada.CodigoChamadaSuspensa != null) && (chamada.CodigoChamadaSuspensa != Guid.Empty))
+                if ((chamada.IdChamadaSuspensa != null) && (chamada.IdChamadaSuspensa != Guid.Empty))
                 {
                     sql += " AND id_chamadasuspensa = @CodigoSuspensa ";
-                    filtros.Add("@CodigoSuspensa", chamada.CodigoChamadaSuspensa);
+                    filtros.Add("@CodigoSuspensa", chamada.IdChamadaSuspensa);
                 }
-                if ((chamada.PalletOrigem != null) && (chamada.PalletOrigem.Codigo != 0))
+                if ((chamada.PalletOrigem != null) && (chamada.PalletOrigem.IdPallet != 0))
                 {
                     sql += " AND id_palletorigem = @PalletOrigem ";
-                    filtros.Add("@PalletOrigem", chamada.PalletOrigem.Codigo);
+                    filtros.Add("@PalletOrigem", chamada.PalletOrigem.IdPallet);
                 }
-                if ((chamada.PalletDestino != null) && (chamada.PalletDestino.Codigo != 0))
+                if ((chamada.PalletDestino != null) && (chamada.PalletDestino.IdPallet != 0))
                 {
                     sql += " AND id_palletdestino = @PalletDestino ";
-                    filtros.Add("@PalletDestino", chamada.PalletDestino.Codigo);
+                    filtros.Add("@PalletDestino", chamada.PalletDestino.IdPallet);
                 }
-                if ((chamada.PalletLeitura != null) && (chamada.PalletLeitura.Codigo != 0))
+                if ((chamada.PalletLeitura != null) && (chamada.PalletLeitura.IdPallet != 0))
                 {
                     sql += " AND id_palletleitura = @PalletLeitura ";
-                    filtros.Add("@PalletLeitura", chamada.PalletLeitura.Codigo);
+                    filtros.Add("@PalletLeitura", chamada.PalletLeitura.IdPallet);
                 }
-                if ((chamada.AreaArmazenagemOrigem != null) && (chamada.AreaArmazenagemOrigem.Codigo != 0))
+                if ((chamada.AreaArmazenagemOrigem != null) && (chamada.AreaArmazenagemOrigem.IdAreaArmazenagem != 0))
                 {
                     sql += " AND id_areaarmazenagemorigem = @AreaArmazenagemOrigem ";
-                    filtros.Add("@AreaArmazenagemOrigem", chamada.AreaArmazenagemOrigem.Codigo);
+                    filtros.Add("@AreaArmazenagemOrigem", chamada.AreaArmazenagemOrigem.IdAreaArmazenagem);
                 }
-                if ((chamada.AreaArmazenagemDestino != null) && (chamada.AreaArmazenagemDestino.Codigo != 0))
+                if ((chamada.AreaArmazenagemDestino != null) && (chamada.AreaArmazenagemDestino.IdAreaArmazenagem != 0))
                 {
                     sql += " AND id_areaarmazenagemdestino = @AreaArmazenagemDestino ";
-                    filtros.Add("@AreaArmazenagemDestino", chamada.AreaArmazenagemDestino.Codigo);
+                    filtros.Add("@AreaArmazenagemDestino", chamada.AreaArmazenagemDestino.IdAreaArmazenagem);
                 }
-                if ((chamada.AreaArmazenagemLeitura != null) && (chamada.AreaArmazenagemLeitura.Codigo != 0))
+                if ((chamada.AreaArmazenagemLeitura != null) && (chamada.AreaArmazenagemLeitura.IdAreaArmazenagem != 0))
                 {
                     sql += " AND id_areaarmazenagemleitura = @AreaArmazenagemLeitura ";
-                    filtros.Add("@AreaArmazenagemLeitura", chamada.AreaArmazenagemLeitura.Codigo);
+                    filtros.Add("@AreaArmazenagemLeitura", chamada.AreaArmazenagemLeitura.IdAreaArmazenagem);
                 }
-                if ((chamada.Operador != null) && (chamada.Operador.Codigo != 0))
+                if ((chamada.Operador != null) && (chamada.Operador.IdOperador != 0))
                 {
                     sql += " AND id_operador = @Operador ";
-                    filtros.Add("@Operador", chamada.Operador.Codigo);
+                    filtros.Add("@Operador", chamada.Operador.IdOperador);
                 }
-                if ((chamada.Equipamento != null) && (chamada.Equipamento.Codigo != 0))
+                if ((chamada.Equipamento != null) && (chamada.Equipamento.IdEquipamento != 0))
                 {
                     sql += " AND id_equipamento = @Equipamento ";
-                    filtros.Add("@Equipamento", chamada.Equipamento.Codigo);
+                    filtros.Add("@Equipamento", chamada.Equipamento.IdEquipamento);
                 }
-                if ((chamada.AtividadeRejeicao != null) && (chamada.AtividadeRejeicao.Codigo != 0))
+                if ((chamada.AtividadeRejeicao != null) && (chamada.AtividadeRejeicao.IdAtividadeRejeicao != 0))
                 {
                     sql += " AND id_atividaderejeicao = @AtividadeRejeicao ";
-                    filtros.Add("@AtividadeRejeicao", chamada.AtividadeRejeicao.Codigo);
+                    filtros.Add("@AtividadeRejeicao", chamada.AtividadeRejeicao.IdAtividadeRejeicao);
                 }
-                if ((chamada.Atividade != null) && (chamada.Atividade.Codigo != 0))
+                if ((chamada.Atividade != null) && (chamada.Atividade.IdAtividade != 0))
                 {
                     sql += " AND id_atividade = @Atividade ";
-                    filtros.Add("@Atividade", chamada.Atividade.Codigo);
+                    filtros.Add("@Atividade", chamada.Atividade.IdAtividade);
                 }
             }
 
@@ -556,21 +556,21 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
                 {
                     var chamadaFormatada = new ChamadaModel
                     {
-                        Codigo = chamadaEncontrada.id_chamada,
-                        Status = (StatusChamada)chamadaEncontrada.fg_status,
-                        DataChamada = chamadaEncontrada.dt_chamada,
-                        DataRecebida = chamadaEncontrada.dt_recebida,
-                        DataAtendida = chamadaEncontrada.dt_atendida,
-                        DataFinalizada = chamadaEncontrada.dt_finalizada,
-                        DataRejeitada = chamadaEncontrada.dt_rejeitada,
-                        DataSuspensa = null,
+                        IdChamada = chamadaEncontrada.id_chamada,
+                        FgStatus = (StatusChamada)chamadaEncontrada.fg_status,
+                        DtChamada = chamadaEncontrada.dt_chamada,
+                        DtRecebida = chamadaEncontrada.dt_recebida,
+                        DtAtendida = chamadaEncontrada.dt_atendida,
+                        DtFinalizada = chamadaEncontrada.dt_finalizada,
+                        DtRejeitada = chamadaEncontrada.dt_rejeitada,
+                        DtSuspensa = null,
                     };
 
                     if (chamadaEncontrada.id_palletorigem != null)
                     {
                         chamadaFormatada.PalletOrigem = new PalletModel
                         {
-                            Codigo = chamadaEncontrada.id_palletorigem.Value
+                            IdPallet = chamadaEncontrada.id_palletorigem.Value
                         };
                     }
 
@@ -578,14 +578,14 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
                     {
                         chamadaFormatada.PalletDestino = new PalletModel
                         {
-                            Codigo = chamadaEncontrada.id_palletdestino.Value
+                            IdPallet = chamadaEncontrada.id_palletdestino.Value
                         };
                     }
                     if (chamadaEncontrada.id_palletleitura != null)
                     {
                         chamadaFormatada.PalletLeitura = new PalletModel
                         {
-                            Codigo = chamadaEncontrada.id_palletleitura.Value
+                            IdPallet = chamadaEncontrada.id_palletleitura.Value
                         };
                     }
 
@@ -593,55 +593,55 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
                     {
                         chamadaFormatada.AreaArmazenagemOrigem = new AreaArmazenagemModel
                         {
-                            Codigo = chamadaEncontrada.id_areaarmazenagemorigem.Value
+                            IdAreaArmazenagem = chamadaEncontrada.id_areaarmazenagemorigem.Value
                         };
                     }
                     if (chamadaEncontrada.id_areaarmazenagemdestino != null)
                     {
                         chamadaFormatada.AreaArmazenagemDestino = new AreaArmazenagemModel
                         {
-                            Codigo = chamadaEncontrada.id_areaarmazenagemdestino.Value
+                            IdAreaArmazenagem = chamadaEncontrada.id_areaarmazenagemdestino.Value
                         };
                     }
                     if (chamadaEncontrada.id_areaarmazenagemleitura != null)
                     {
                         chamadaFormatada.AreaArmazenagemLeitura = new AreaArmazenagemModel
                         {
-                            Codigo = chamadaEncontrada.id_areaarmazenagemleitura.Value
+                            IdAreaArmazenagem = chamadaEncontrada.id_areaarmazenagemleitura.Value
                         };
                     }
                     if (chamadaEncontrada.id_operador != null)
                     {
                         chamadaFormatada.Operador = new OperadorModel
                         {
-                            Codigo = chamadaEncontrada.id_operador.Value
+                            IdOperador = chamadaEncontrada.id_operador.Value
                         };
                     }
                     if (chamadaEncontrada.id_equipamento != null)
                     {
                         chamadaFormatada.Equipamento = new EquipamentoModel
                         {
-                            Codigo = chamadaEncontrada.id_equipamento.Value
+                            IdEquipamento = chamadaEncontrada.id_equipamento.Value
                         };
                     }
                     if (chamadaEncontrada.id_atividaderejeicao != null)
                     {
                         chamadaFormatada.AtividadeRejeicao = new AtividadeRejeicaoModel
                         {
-                            Codigo = chamadaEncontrada.id_atividaderejeicao.Value
+                            IdAtividadeRejeicao = chamadaEncontrada.id_atividaderejeicao.Value
                         };
                     }
                     if (chamadaEncontrada.id_atividade != null)
                     {
                         chamadaFormatada.Atividade = new AtividadeModel
                         {
-                            Codigo = chamadaEncontrada.id_atividade.Value
+                            IdAtividade = chamadaEncontrada.id_atividade.Value
                         };
                     }
 
                     if (chamadaEncontrada.id_chamadasuspensa != null)
                     {
-                        chamadaFormatada.CodigoChamadaSuspensa = chamadaEncontrada.id_chamadasuspensa.Value;
+                        chamadaFormatada.IdChamadaSuspensa = chamadaEncontrada.id_chamadasuspensa.Value;
                     }
 
                     listaFormatada.Add(chamadaFormatada);

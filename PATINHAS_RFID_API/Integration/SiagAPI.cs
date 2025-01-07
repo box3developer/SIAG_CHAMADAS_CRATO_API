@@ -133,13 +133,13 @@ public class SiagAPI
 
                 var parametros = new AtividadeTarefaFiltroDTO()
                 {
-                    Codigo = filtro.Codigo,
-                    Descricao = filtro.Descricao,
-                    Mensagem = filtro.Mensagem,
-                    AtividadeId = filtro.Atividade.Codigo,
-                    Sequencia = filtro.Sequencia,
-                    Recursos = (int)(filtro.Recursos ?? 0),
-                    AtividadeRotinaId = filtro.AtividadeRotina.Codigo,
+                    Codigo = filtro.IdTarefa,
+                    Descricao = filtro.NmTarefa,
+                    Mensagem = filtro.NmMensagem,
+                    AtividadeId = filtro.Atividade.IdAtividade,
+                    Sequencia = filtro.CdSequencia,
+                    Recursos = (int)(filtro.FgRecurso ?? 0),
+                    AtividadeRotinaId = filtro.AtividadeRotina.IdAtividadeRotina,
                 };
 
                 var response = await client.PostAsJsonAsync(url, parametros);

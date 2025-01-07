@@ -18,17 +18,17 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
             {
                 var areaArmazenagemEncontrada = (await conexao.QueryAsync<EquipamentoCheckListQuery>(sql, new
                 {
-                    nm_identificador = equipamento.Identificador
+                    nm_identificador = equipamento.NmIdentificador
                 })).Select(x => new EquipamentoChecklistModel
                 {
-                    Codigo = x.id_equipamentochecklist,
-                    Modelo = new Models.EquipamentoModeloModel
+                    IdEquipamentoChecklist = x.id_equipamentochecklist,
+                    EquipamentoModelo = new Models.EquipamentoModeloModel
                     {
                         Codigo = x.id_equipamentomodelo
                     },
-                    Descricao = x.nm_descricao,
-                    Critico = x.fg_critico == 1 ? true : false,
-                    Status = (Status)x.fg_status
+                    NmDescricao = x.nm_descricao,
+                    FgCritico = x.fg_critico == 1 ? true : false,
+                    FgStatus = (Status)x.fg_status
                 }).ToList();
 
                 return areaArmazenagemEncontrada;

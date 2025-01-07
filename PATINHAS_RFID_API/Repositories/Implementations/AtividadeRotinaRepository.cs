@@ -21,15 +21,15 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
             {
                 var atividadeRotina= await conexao.QueryFirstOrDefaultAsync<AtividadeRotinaQuery>(sql, new
                 {
-                    Codigo = rotina.Codigo,
+                    Codigo = rotina.IdAtividadeRotina,
                 });
 
                 return new AtividadeRotinaModel
                 {
-                    Codigo = atividadeRotina.id_atividadeRotina,
-                    Nome = atividadeRotina.nm_AtividadeRotina,
-                    Procedure = atividadeRotina.nm_procedure,
-                    Tipo = (TipoRotina)atividadeRotina.fg_tipo,
+                    IdAtividadeRotina = atividadeRotina.id_atividadeRotina,
+                    NmAtividadeRotina = atividadeRotina.nm_AtividadeRotina,
+                    NmProcedure = atividadeRotina.nm_procedure,
+                    FgTipo = (TipoRotina)atividadeRotina.fg_tipo,
                 };
             }
         }

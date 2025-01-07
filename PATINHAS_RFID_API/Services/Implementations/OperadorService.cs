@@ -30,7 +30,7 @@ namespace PATINHAS_RFID_API.Services.Implementations
                 long.TryParse(consultarOperadorDTO.Cracha, out codigo);
 
             if (codigo == 0) operador.NFC = consultarOperadorDTO.Cracha;
-            else operador.Codigo = codigo;
+            else operador.IdOperador = codigo;
             
             //Consulta o operador através do código (crachá)
             operador = await _operadorRepository.Consultar(operador);
@@ -78,7 +78,7 @@ namespace PATINHAS_RFID_API.Services.Implementations
                 OperadorModel operador = new OperadorModel();
                 Int64 codigo = 0;
                 Int64.TryParse(cracha, out codigo);
-                operador.Codigo = codigo;
+                operador.IdOperador = codigo;
 
                 _equipamentoRepository.LogoffOperador(equipamento, operador);
 

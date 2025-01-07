@@ -28,7 +28,7 @@ public class ChamadaTarefaRepository : IChamadaTarefaRepository
         var chamadas = new List<ChamadaTarefaModel>();
         if (chamadaTarefa != null)
         {
-            chamadas = await SiagAPI.GetChamadasTarefasById(chamadaTarefa.Chamada.Codigo, chamadaTarefa.Tarefa.Codigo);
+            chamadas = await SiagAPI.GetChamadasTarefasById(chamadaTarefa.Chamada.IdChamada, chamadaTarefa.Tarefa.IdTarefa);
         }
         else
         {
@@ -39,11 +39,11 @@ public class ChamadaTarefaRepository : IChamadaTarefaRepository
         {
             Tarefa = new AtividadeTarefaModel
             {
-                Codigo = x.AtividadeId,
+                IdTarefa = x.IdTarefa,
             },
             Chamada = new ChamadaModel
             {
-                Codigo = x.ChamadaId,
+                IdChamada = x.ChamadaId,
             },
             DataInicio = x.DataInicio,
             DataFim = x.DataFim

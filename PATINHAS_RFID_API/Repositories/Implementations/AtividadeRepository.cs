@@ -23,32 +23,32 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
             {
                 var atividadeEncontrada = await conexao.QueryFirstOrDefaultAsync<AtividadeQuery>(sql, new
                 {
-                    Codigo = atividade.Codigo
+                    Codigo = atividade.IdAtividade
                 });
 
                 return new AtividadeModel
                 {
-                    Codigo = atividadeEncontrada.id_atividade,
-                    Descricao = atividadeEncontrada.nm_atividade,
+                    IdAtividade = atividadeEncontrada.id_atividade,
+                    NmAtividade = atividadeEncontrada.nm_atividade,
                     EquipamentoModelo = new EquipamentoModeloModel
                     {
                         Codigo = atividadeEncontrada.id_equipamentomodelo,
                     },
-                    PermiteRejeitar = (RejeicaoTarefa)atividadeEncontrada.fg_permite_rejeitar,
+                    FgPermiteRejeitar = (RejeicaoTarefa)atividadeEncontrada.fg_permite_rejeitar,
                     AtividadeAnterior = new AtividadeModel
                     {
-                        Codigo= atividadeEncontrada.id_atividadeanterior,
+                        IdAtividade= atividadeEncontrada.id_atividadeanterior,
                     },
                     SetorTrabalho = new SetorModel
                     {
                         Codigo = atividadeEncontrada.id_setortrabalho
                     },
-                    TipoAtribuicaoAutomatica = (TipoAtribuicaoAutomatica)atividadeEncontrada.fg_tipoatribuicaoautomatica,
+                    FgTipoAtribuicaoAutomatica = (TipoAtribuicaoAutomatica)atividadeEncontrada.fg_tipoatribuicaoautomatica,
                     AtividadeRotinaValidacao = new AtividadeRotinaModel
                     {
-                        Codigo = atividadeEncontrada.id_atividaderotinavalidacao
+                        IdAtividadeRotina = atividadeEncontrada.id_atividaderotinavalidacao
                     },
-                    EvitarConflitoEndereco = (ConflitoDeEnderecos)atividadeEncontrada.fg_evitaconflitoendereco,
+                    FgEvitaConflitoEndereco = (ConflitoDeEnderecos)atividadeEncontrada.fg_evitaconflitoendereco,
                 };
             }
         }

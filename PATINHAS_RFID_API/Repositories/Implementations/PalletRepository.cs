@@ -32,29 +32,29 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
 
                 return new PalletModel
                 {
-                    Codigo = pallet.id_pallet,
+                    IdPallet = pallet.id_pallet,
                     AreaArmazenagem = new AreaArmazenagemModel
                     {
-                        Codigo = pallet.id_areaarmazenagem,
+                        IdAreaArmazenagem = pallet.id_areaarmazenagem,
                     },
                     Agrupador = new AgrupadorAtivoModel
                     {
                         Codigo = pallet.id_agrupador,
                     },
-                    Status = (StatusPallet)pallet.fg_status,
+                    FgStatus = (StatusPallet)pallet.fg_status,
                     QtUtilizacao = pallet.qt_utilizacao,
-                    DataUltimaMovimentacao = pallet.dt_ultimamovimentacao,
-                    Identificacao = pallet.cd_identificacao
+                    DtUltimaMovimentacao = pallet.dt_ultimamovimentacao,
+                    CdIdentificacao = pallet.cd_identificacao
                 };
             }
         }
 
         private static void ValidaCampos(PalletModel pallet, bool emEdicao = false)
         {
-            if (pallet.Codigo <= 0 && emEdicao)
+            if (pallet.IdPallet <= 0 && emEdicao)
                 throw new Exception("Para inserir/alterar um pallet o código deve ser maior que zero (0).");
 
-            if ((int)pallet.Status <= 0)
+            if ((int)pallet.FgStatus <= 0)
                 throw new Exception("Para inserir/alterar um pallet é obrigatório informar status.");
         }
 
@@ -72,25 +72,25 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
         public async Task<bool> Inserir(PalletModel pallet)
         {
             ValidaCampos(pallet);
-            validaIdentificador(pallet.Identificacao, pallet.Codigo);
+            validaIdentificador(pallet.CdIdentificacao, pallet.IdPallet);
 
             var filtros = new Dictionary<string, object>();
 
-            filtros.Add("@Codigo", pallet.Codigo);
-            filtros.Add("@Status", (int)pallet.Status);
+            filtros.Add("@Codigo", pallet.IdPallet);
+            filtros.Add("@Status", (int)pallet.FgStatus);
             filtros.Add("@QtUtilizacao", pallet.QtUtilizacao);
 
             if (pallet.AreaArmazenagem == null) filtros.Add("@AreaArmazenagem", DBNull.Value);
-            else filtros.Add("@AreaArmazenagem", pallet.AreaArmazenagem.Codigo);
+            else filtros.Add("@AreaArmazenagem", pallet.AreaArmazenagem.IdAreaArmazenagem);
 
             if ((pallet.Agrupador == null) || (pallet.Agrupador.Codigo == Guid.Empty)) filtros.Add("@Agrupador", DBNull.Value);
             else filtros.Add("@Agrupador", pallet.Agrupador.Codigo);
 
-            if (pallet.DataUltimaMovimentacao == null) filtros.Add("@DataUltimaMovimentacao", DBNull.Value);
-            else filtros.Add("@DataUltimaMovimentacao", pallet.DataUltimaMovimentacao);
+            if (pallet.DtUltimaMovimentacao == null) filtros.Add("@DataUltimaMovimentacao", DBNull.Value);
+            else filtros.Add("@DataUltimaMovimentacao", pallet.DtUltimaMovimentacao);
 
-            if (pallet.Identificacao == null) filtros.Add("@Identificacao", DBNull.Value);
-            else filtros.Add("@Identificacao", pallet.Identificacao);
+            if (pallet.CdIdentificacao == null) filtros.Add("@Identificacao", DBNull.Value);
+            else filtros.Add("@Identificacao", pallet.CdIdentificacao);
 
             var parametros = new DynamicParameters(filtros);
 

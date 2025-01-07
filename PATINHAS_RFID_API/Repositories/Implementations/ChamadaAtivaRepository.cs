@@ -57,9 +57,9 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
                     id_endereco = id_endereco,
                 });
 
-                if (areaRetorno != null && (areaRetorno.Identificacao != null) && (!String.IsNullOrEmpty(areaRetorno.Identificacao.ToString())))
+                if (areaRetorno != null && (areaRetorno.CdIdentificacao != null) && (!String.IsNullOrEmpty(areaRetorno.CdIdentificacao.ToString())))
                 {
-                    areaRetorno.Codigo = Convert.ToInt64(areaRetorno.Identificacao.ToString());
+                    areaRetorno.IdAreaArmazenagem = Convert.ToInt64(areaRetorno.CdIdentificacao.ToString());
                     return areaRetorno;
                 }
 
@@ -78,7 +78,7 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
                 var resercada = await conexao.ExecuteAsync(sql, new
                 {
                     Status = StatusAreaArmazenagem.Reservado,
-                    Codigo = areaArmazenagem.Codigo
+                    Codigo = areaArmazenagem.IdAreaArmazenagem
                 });
 
                 return resercada > 0;
@@ -96,13 +96,13 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
             {
                 var remover = await conexao.ExecuteAsync(sqlD, new
                 {
-                    Origem = areaOrigem.Codigo,
+                    Origem = areaOrigem.IdAreaArmazenagem,
                 });
 
                 var criar = await conexao.ExecuteAsync(sqlI, new
                 {
-                    Origem = areaOrigem.Codigo,
-                    Destino = areaDestino.Codigo,
+                    Origem = areaOrigem.IdAreaArmazenagem,
+                    Destino = areaDestino.IdAreaArmazenagem,
                 });
 
                 return remover > 0 && criar > 0;

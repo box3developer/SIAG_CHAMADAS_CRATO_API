@@ -15,15 +15,15 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
             string sql = sqlSelect;
             if (atividade != null)
             {
-                if (atividade.Codigo != 0)
+                if (atividade.IdAtividadeRejeicao != 0)
                 {
                     sql += " AND id_atividaderejeicao = @Codigo ";
                 }
-                if (!String.IsNullOrEmpty(atividade.Descricao))
+                if (!String.IsNullOrEmpty(atividade.NmAtividadeRejeicao))
                 {
                     sql += " AND nm_atividaderejeicao like @Nome ";
                 }
-                if (!String.IsNullOrEmpty(atividade.Email))
+                if (!String.IsNullOrEmpty(atividade.NmEmailAlerta))
                 {
                     sql += " AND nm_email_alerta = @Email ";
                 }
@@ -33,14 +33,14 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
             {
                 var listaAtividadeRejeicao = (await conexao.QueryAsync<AtividadeRejeicaoQuery>(sql, new
                 {
-                    Codigo = atividade?.Codigo,
-                    Nome = atividade?.Descricao,
-                    Email = atividade?.Email
+                    Codigo = atividade?.IdAtividadeRejeicao,
+                    Nome = atividade?.NmAtividadeRejeicao,
+                    Email = atividade?.NmEmailAlerta
                 })).Select(x => new AtividadeRejeicaoModel
                 {
-                    Codigo = x.id_atividaderejeicao,
-                    Descricao = x.nm_atividaderejeicao,
-                    Email = x.nm_email_alerta,
+                    IdAtividadeRejeicao = x.id_atividaderejeicao,
+                    NmAtividadeRejeicao = x.nm_atividaderejeicao,
+                    NmEmailAlerta = x.nm_email_alerta,
                 }).ToList();
 
                 return listaAtividadeRejeicao;

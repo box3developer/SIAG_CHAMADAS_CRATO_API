@@ -114,27 +114,27 @@ namespace PATINHAS_RFID_API.Controllers
                 var lista = new List<EquipamentoChecklistModel> {
                     new EquipamentoChecklistModel
                     {
-                        Codigo = 1,
-                        Modelo = new EquipamentoModeloModel(),
-                        Descricao = "Verifique a carga da bateria",
-                        Critico = false,
-                        Status = Status.Ativo
+                        IdEquipamentoChecklist = 1,
+                        EquipamentoModelo = new EquipamentoModeloModel(),
+                        NmDescricao = "Verifique a carga da bateria",
+                        FgCritico = false,
+                        FgStatus = Status.Ativo
                     },
                     new EquipamentoChecklistModel
                     {
-                        Codigo = 2,
-                        Modelo = new EquipamentoModeloModel(),
-                        Descricao = "Teste Número 2",
-                        Critico = false,
-                        Status = Status.Ativo
+                        IdEquipamentoChecklist = 2,
+                        EquipamentoModelo = new EquipamentoModeloModel(),
+                        NmDescricao = "Teste Número 2",
+                        FgCritico = false,
+                        FgStatus = Status.Ativo
                     },
                     new EquipamentoChecklistModel
                     {
-                        Codigo = 3,
-                        Modelo = new EquipamentoModeloModel(),
-                        Descricao = "Teste Número 3",
-                        Critico = false,
-                        Status = Status.Ativo
+                        IdEquipamentoChecklist = 3,
+                        EquipamentoModelo = new EquipamentoModeloModel(),
+                        NmDescricao = "Teste Número 3",
+                        FgCritico = false,
+                        FgStatus = Status.Ativo
                     },
                 };
 

@@ -46,12 +46,12 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
 
                 foreach (AtividadeTarefaModel item in atividades)
                 {
-                    if (item.Mensagem.Contains("#"))
+                    if (item.NmMensagem.Contains("#"))
                     {
 
                         if (chamada.AreaArmazenagemDestino != null)
                         {
-                            CodigoDestino = chamada.AreaArmazenagemDestino.Codigo.ToString().PadLeft(10, '0');
+                            CodigoDestino = chamada.AreaArmazenagemDestino.IdAreaArmazenagem.ToString().PadLeft(10, '0');
                         }
                         else
                         {
@@ -60,85 +60,85 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
 
                         if (chamada.AreaArmazenagemOrigem != null)
                         {
-                            CodigoOrigem = chamada.AreaArmazenagemOrigem.Codigo.ToString().PadLeft(10, '0');
+                            CodigoOrigem = chamada.AreaArmazenagemOrigem.IdAreaArmazenagem.ToString().PadLeft(10, '0');
                         }
                         else
                         {
                             CodigoOrigem = "";
                         }
 
-                        string[] chave = item.Mensagem.Split('#');
+                        string[] chave = item.NmMensagem.Split('#');
                         for (int i = 1; i < chave.Length; i += 2)
                         {
                             try
                             {
                                 if (chave[i].ToLower().Contains("caracoldest"))
                                 {
-                                    item.Mensagem = item.Mensagem.Replace("#" + chave[i] + "#", CodigoDestino.Substring(4, 3));
+                                    item.NmMensagem = item.NmMensagem.Replace("#" + chave[i] + "#", CodigoDestino.Substring(4, 3));
                                 }
                                 else if (chave[i].ToLower().Contains("caracolori"))
                                 {
-                                    item.Mensagem = item.Mensagem.Replace("#" + chave[i] + "#", CodigoOrigem.Substring(4, 3));
+                                    item.NmMensagem = item.NmMensagem.Replace("#" + chave[i] + "#", CodigoOrigem.Substring(4, 3));
                                 }
                                 else if (chave[i].ToLower().Contains("posicaodest"))
                                 {
-                                    item.Mensagem = item.Mensagem.Replace("#" + chave[i] + "#", CodigoDestino.Substring(7, 2));
+                                    item.NmMensagem = item.NmMensagem.Replace("#" + chave[i] + "#", CodigoDestino.Substring(7, 2));
                                 }
                                 else if (chave[i].ToLower().Contains("posicaoori"))
                                 {
-                                    item.Mensagem = item.Mensagem.Replace("#" + chave[i] + "#", CodigoOrigem.Substring(7, 2));
+                                    item.NmMensagem = item.NmMensagem.Replace("#" + chave[i] + "#", CodigoOrigem.Substring(7, 2));
                                 }
                                 else if (chave[i].ToLower().Contains("corredordes"))
                                 {
-                                    item.Mensagem = item.Mensagem.Replace("#" + chave[i] + "#", CodigoDestino.Substring(2, 3));
+                                    item.NmMensagem = item.NmMensagem.Replace("#" + chave[i] + "#", CodigoDestino.Substring(2, 3));
                                 }
                                 else if (chave[i].ToLower().Contains("corredorori"))
                                 {
-                                    item.Mensagem = item.Mensagem.Replace("#" + chave[i] + "#", CodigoOrigem.Substring(2, 3));
+                                    item.NmMensagem = item.NmMensagem.Replace("#" + chave[i] + "#", CodigoOrigem.Substring(2, 3));
                                 }
                                 else if (chave[i].ToLower().Contains("colunades"))
                                 {
-                                    item.Mensagem = item.Mensagem.Replace("#" + chave[i] + "#", CodigoDestino.Substring(5, 2));
+                                    item.NmMensagem = item.NmMensagem.Replace("#" + chave[i] + "#", CodigoDestino.Substring(5, 2));
                                 }
                                 else if (chave[i].ToLower().Contains("colunaori"))
                                 {
-                                    item.Mensagem = item.Mensagem.Replace("#" + chave[i] + "#", CodigoOrigem.Substring(5, 2));
+                                    item.NmMensagem = item.NmMensagem.Replace("#" + chave[i] + "#", CodigoOrigem.Substring(5, 2));
                                 }
                                 else if (chave[i].ToLower().Contains("alturades"))
                                 {
-                                    item.Mensagem = item.Mensagem.Replace("#" + chave[i] + "#", CodigoDestino.Substring(7, 2));
+                                    item.NmMensagem = item.NmMensagem.Replace("#" + chave[i] + "#", CodigoDestino.Substring(7, 2));
                                 }
                                 else if (chave[i].ToLower().Contains("alturaori"))
                                 {
-                                    item.Mensagem = item.Mensagem.Replace("#" + chave[i] + "#", CodigoOrigem.Substring(7, 2));
+                                    item.NmMensagem = item.NmMensagem.Replace("#" + chave[i] + "#", CodigoOrigem.Substring(7, 2));
                                 }
                                 else if (chave[i].ToLower().Contains("ladodes"))
                                 {
-                                    item.Mensagem = item.Mensagem.Replace("#" + chave[i] + "#", CodigoDestino.Substring(9, 1));
+                                    item.NmMensagem = item.NmMensagem.Replace("#" + chave[i] + "#", CodigoDestino.Substring(9, 1));
                                 }
                                 else if (chave[i].ToLower().Contains("ladoori"))
                                 {
-                                    item.Mensagem = item.Mensagem.Replace("#" + chave[i] + "#", CodigoOrigem.Substring(9, 1));
+                                    item.NmMensagem = item.NmMensagem.Replace("#" + chave[i] + "#", CodigoOrigem.Substring(9, 1));
                                 }
                                 else if (chave[i].ToLower().Contains("enderecoori"))
                                 {
-                                    areaOrigem = await SiagAPI.GetAreaArmazenagemByIdAsync(chamada?.AreaArmazenagemOrigem?.Codigo ?? 0);
+                                    areaOrigem = await SiagAPI.GetAreaArmazenagemByIdAsync(chamada?.AreaArmazenagemOrigem?.IdAreaArmazenagem ?? 0);
                                     enderecoOrigem = await _enderecoRepository.Consultar(areaOrigem.Endereco);
-                                    item.Mensagem = item.Mensagem.Replace("#" + chave[i] + "#", enderecoOrigem.Descricao);
+                                    item.NmMensagem = item.NmMensagem.Replace("#" + chave[i] + "#", enderecoOrigem.NmEndereco);
                                 }
                                 else if (chave[i].ToLower().Contains("enderecodes"))
                                 {
-                                    areaDestino = await SiagAPI.GetAreaArmazenagemByIdAsync(chamada?.AreaArmazenagemDestino?.Codigo ?? 0);
+                                    areaDestino = await SiagAPI.GetAreaArmazenagemByIdAsync(chamada?.AreaArmazenagemDestino?.IdAreaArmazenagem ?? 0);
                                     enderecoDestino = await _enderecoRepository.Consultar(areaDestino.Endereco);
-                                    item.Mensagem = item.Mensagem.Replace("#" + chave[i] + "#", enderecoDestino.Descricao);
+                                    item.NmMensagem = item.NmMensagem.Replace("#" + chave[i] + "#", enderecoDestino.NmEndereco);
                                 }
                             }
                             catch (Exception)
                             {
-                                item.Mensagem = item.Mensagem.Replace("#" + chave[i] + "#", "?");
+                                item.NmMensagem = item.NmMensagem.Replace("#" + chave[i] + "#", "?");
                             }
 
-                            item.Descricao = item.Mensagem;
+                            item.NmTarefa = item.NmMensagem;
                         }
                     }
                 }
@@ -164,40 +164,40 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
 
             if (tarefa != null)
             {
-                if (tarefa.Codigo != 0)
+                if (tarefa.IdTarefa != 0)
                 {
                     sql += " AND id_tarefa = @Codigo ";
-                    filtros.Add("@Codigo", tarefa.Codigo);
+                    filtros.Add("@Codigo", tarefa.IdTarefa);
                 }
-                if (tarefa.Sequencia != 0)
+                if (tarefa.CdSequencia != 0)
                 {
                     sql += " AND cd_sequencia = @Seq ";
-                    filtros.Add("@Seq", tarefa.Sequencia);
+                    filtros.Add("@Seq", tarefa.CdSequencia);
                 }
-                if (tarefa.Recursos != null)
+                if (tarefa.FgRecurso != null)
                 {
                     sql += " AND fg_recurso = @Rec ";
-                    filtros.Add("@Rec", (int)tarefa.Recursos);
+                    filtros.Add("@Rec", (int)tarefa.FgRecurso);
                 }
-                if (!String.IsNullOrEmpty(tarefa.Descricao))
+                if (!String.IsNullOrEmpty(tarefa.NmTarefa))
                 {
                     sql += " AND nm_tarefa like @Nome ";
-                    filtros.Add("@Nome", "%" + tarefa.Descricao + "%");
+                    filtros.Add("@Nome", "%" + tarefa.NmTarefa + "%");
                 }
-                if (tarefa.Mensagem != null)
+                if (tarefa.NmMensagem != null)
                 {
                     sql += " AND nm_mensagem like @Mensangem ";
-                    filtros.Add("@Mensangem", "%" + tarefa.Mensagem + "%");
+                    filtros.Add("@Mensangem", "%" + tarefa.NmMensagem + "%");
                 }
-                if (tarefa.Atividade != null && tarefa.Atividade.Codigo != 0)
+                if (tarefa.Atividade != null && tarefa.Atividade.IdAtividade != 0)
                 {
                     sql += " AND id_atividade = @Equipamento ";
-                    filtros.Add("@Equipamento", tarefa.Atividade.Codigo);
+                    filtros.Add("@Equipamento", tarefa.Atividade.IdAtividade);
                 }
-                if (tarefa.AtividadeRotina != null && tarefa.AtividadeRotina.Codigo != 0)
+                if (tarefa.AtividadeRotina != null && tarefa.AtividadeRotina.IdAtividadeRotina != 0)
                 {
                     sql += " AND id_atividaderotina = @AtividadeAnterior ";
-                    filtros.Add("@AtividadeAnterior", tarefa.AtividadeRotina.Codigo);
+                    filtros.Add("@AtividadeAnterior", tarefa.AtividadeRotina.IdAtividadeRotina);
                 }
                 sql += " ORDER BY cd_sequencia ";
             }
@@ -209,21 +209,21 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
                 var atividades = (await conexao.QueryAsync<AtividadeTarefaQuery>(sql, parametros))
                     .Select(x => new AtividadeTarefaModel
                     {
-                        Codigo = x.id_tarefa,
-                        Descricao = x.nm_tarefa,
-                        Mensagem = x.nm_mensagem,
+                        IdTarefa = x.id_tarefa,
+                        NmTarefa = x.nm_tarefa,
+                        NmMensagem = x.nm_mensagem,
                         Atividade = new AtividadeModel
                         {
-                            Codigo = x.id_atividade,
+                            IdAtividade = x.id_atividade,
                         },
-                        Sequencia = x.cd_sequencia,
-                        Recursos = (Recursos)x.fg_recurso.Value,
+                        CdSequencia = x.cd_sequencia,
+                        FgRecurso = (Recursos)x.fg_recurso.Value,
                         AtividadeRotina = new AtividadeRotinaModel
                         {
-                            Codigo = x.id_atividaderotina
+                            IdAtividadeRotina = x.id_atividaderotina
                         },
-                        PotenciaNormal = x.qt_potencianormal,
-                        PotenciaAumentada = x.qt_potenciaaumentada
+                        QtPotenciaNormal = x.qt_potencianormal,
+                        QtPotenciaAumentada = x.qt_potenciaaumentada
                     }).ToList();
 
                 return atividades;
@@ -239,26 +239,26 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
             {
                 var atividade = await conexao.QueryFirstOrDefaultAsync<AtividadeTarefaQuery>(sql, new
                 {
-                    Codigo = tarefa.Codigo,
+                    Codigo = tarefa.IdTarefa,
                 });
 
                 return new AtividadeTarefaModel
                 {
-                    Codigo = atividade.id_tarefa,
-                    Descricao = atividade.nm_tarefa,
-                    Mensagem = atividade.nm_mensagem,
+                    IdTarefa = atividade.id_tarefa,
+                    NmTarefa = atividade.nm_tarefa,
+                    NmMensagem = atividade.nm_mensagem,
                     Atividade = new AtividadeModel
                     {
-                        Codigo = atividade.id_atividade,
+                        IdAtividade = atividade.id_atividade,
                     },
-                    Sequencia = atividade.cd_sequencia,
-                    Recursos = (Recursos)atividade.fg_recurso,
+                    CdSequencia = atividade.cd_sequencia,
+                    FgRecurso = (Recursos)atividade.fg_recurso,
                     AtividadeRotina = new AtividadeRotinaModel
                     {
-                        Codigo = atividade.id_atividaderotina
+                        IdAtividadeRotina = atividade.id_atividaderotina
                     },
-                    PotenciaNormal = atividade.qt_potencianormal,
-                    PotenciaAumentada = atividade.qt_potenciaaumentada
+                    QtPotenciaNormal = atividade.qt_potencianormal,
+                    QtPotenciaAumentada = atividade.qt_potenciaaumentada
                 };
             }
         }
