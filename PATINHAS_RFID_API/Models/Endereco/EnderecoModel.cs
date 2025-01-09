@@ -34,9 +34,10 @@ public class RegiaoModel
 public class SetorModel
 {
 
-    public int Codigo { get; set; }
+    public int IdSetorTrabalho { get; set; }
+    public int IdDeposito { get; set; }
     public DepositoModel? Deposito { get; set; }
-    public string Descricao { get; set; } = string.Empty;
+    public string NmSetorTrabalho { get; set; } = string.Empty;
 }
 
 public class DepositoModel

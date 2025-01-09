@@ -5,33 +5,31 @@ using PATINHAS_RFID_API.Data;
 using PATINHAS_RFID_API.Models.AtividadeRotina;
 using PATINHAS_RFID_API.Repositories.Interfaces;
 
-namespace PATINHAS_RFID_API.Repositories.Implementations
+namespace PATINHAS_RFID_API.Repositories.Implementations;
+
+public class AtividadeRotinaRepository : IAtividadeRotinaRepository
 {
-    public class AtividadeRotinaRepository : IAtividadeRotinaRepository
+    const string sqlSelect = " SELECT id_atividadeRotina, nm_AtividadeRotina, nm_procedure, fg_tipo FROM atividaderotina with(NOLOCK) WHERE 1 = 1 ";
+
+    public async Task<AtividadeRotinaModel> Consultar(AtividadeRotinaModel rotina)
     {
-        const string sqlSelect = " SELECT id_atividadeRotina, nm_AtividadeRotina, nm_procedure, fg_tipo FROM atividaderotina with(NOLOCK) WHERE 1 = 1 ";
+        string sql = sqlSelect;
+        sql += " AND id_atividadeRotina = @Codigo ";
 
-        public async Task<AtividadeRotinaModel> Consultar(AtividadeRotinaModel rotina)
+        using (var conexao = new SqlConnection(Global.Conexao))
         {
-            string sql = sqlSelect;
-            sql += " AND id_atividadeRotina = @Codigo ";
-
-
-            using (var conexao = new SqlConnection(Global.Conexao))
+            var atividadeRotina = await conexao.QueryFirstOrDefaultAsync<AtividadeRotinaQuery>(sql, new
             {
-                var atividadeRotina= await conexao.QueryFirstOrDefaultAsync<AtividadeRotinaQuery>(sql, new
-                {
-                    Codigo = rotina.IdAtividadeRotina,
-                });
+                Codigo = rotina.IdAtividadeRotina,
+            });
 
-                return new AtividadeRotinaModel
-                {
-                    IdAtividadeRotina = atividadeRotina.id_atividadeRotina,
-                    NmAtividadeRotina = atividadeRotina.nm_AtividadeRotina,
-                    NmProcedure = atividadeRotina.nm_procedure,
-                    FgTipo = (TipoRotina)atividadeRotina.fg_tipo,
-                };
-            }
+            return new AtividadeRotinaModel
+            {
+                IdAtividadeRotina = atividadeRotina.id_atividadeRotina,
+                NmAtividadeRotina = atividadeRotina.nm_AtividadeRotina,
+                NmProcedure = atividadeRotina.nm_procedure,
+                FgTipo = (TipoRotina)atividadeRotina.fg_tipo,
+            };
         }
     }
 }

@@ -2,12 +2,12 @@
 using grendene_caracois_api_csharp;
 using Microsoft.Data.SqlClient;
 using PATINHAS_RFID_API.Data;
+using PATINHAS_RFID_API.Integration;
 using PATINHAS_RFID_API.Models;
 using PATINHAS_RFID_API.Models.Endereco;
 using PATINHAS_RFID_API.Models.Equipamento;
 using PATINHAS_RFID_API.Models.Operador;
 using PATINHAS_RFID_API.Repositories.Interfaces;
-using System.Dynamic;
 
 namespace PATINHAS_RFID_API.Repositories.Implementations
 {
@@ -36,21 +36,29 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
                     Codigo = codigo
                 });
 
-                if (equipamento == null) return null;
+                if (equipamento == null)
+                {
+                    return null;
+                }
 
                 return new EquipamentoModel
                 {
                     IdEquipamento = equipamento.id_equipamento,
-                    EquipamentoModelo = new EquipamentoModeloModel {
+                    EquipamentoModelo = new EquipamentoModeloModel
+                    {
                         Codigo = equipamento.id_equipamentomodelo,
                     },
                     SetorTrabalho = new SetorModel
                     {
-                        Codigo = equipamento.id_setortrabalho
+                        IdSetorTrabalho = equipamento.id_setortrabalho
                     },
                     Operador = new OperadorModel
                     {
                         IdOperador = equipamento.id_operador
+                    },
+                    Endereco = new EnderecoModel
+                    {
+                        IdEndereco = equipamento.id_endereco,
                     },
                     NmEquipamento = equipamento.nm_equipamento,
                     NmAbreviadoEquipamento = equipamento.nm_abreviado_equipamento,
@@ -59,10 +67,6 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
                     DtInclusao = equipamento.dt_inclusao,
                     DtManutencao = equipamento.dt_manutencao,
                     DtUltimaLeitura = equipamento.dt_ultimaleitura,
-                    Endereco = new EnderecoModel
-                    {
-                        IdEndereco = equipamento.id_endereco,
-                    },
                     NmIP = equipamento.nm_ip,
                     FgStatusTrocaCaracol = (Ativo)equipamento.fg_statustrocacaracol,
                 };
@@ -76,7 +80,9 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
             int? codigoEndereco = null;
 
             if ((endereco != null) && (endereco.IdEndereco > 0))
+            {
                 codigoEndereco = endereco.IdEndereco;
+            }
 
             using (var conexao = new SqlConnection(Global.Conexao))
             {
@@ -91,7 +97,9 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
         public async Task<List<EquipamentoModel>> ConsultarLista(EquipamentoModel? equipamento = null, int codInicial = 0, int codFinal = 0)
         {
             if ((codInicial != 0 & codFinal != 0) & (codInicial > codFinal))
+            {
                 throw new Exception("O código inicial não pode ser maior que o código final.");
+            }
 
             string sql = sqlSelect;
 
@@ -99,10 +107,10 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
 
             if (equipamento != null)
             {
-                if ((equipamento.SetorTrabalho != null) && (equipamento.SetorTrabalho.Codigo != 0))
+                if ((equipamento.SetorTrabalho != null) && (equipamento.SetorTrabalho.IdSetorTrabalho != 0))
                 {
                     sql += " AND id_setortrabalho = @Setor ";
-                    filtros.Add("@Setor", equipamento.SetorTrabalho.Codigo);
+                    filtros.Add("@Setor", equipamento.SetorTrabalho.IdSetorTrabalho);
                 }
                 if ((equipamento.Operador != null) && (equipamento.Operador.IdOperador != 0))
                 {
@@ -164,7 +172,7 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
                     },
                     SetorTrabalho = new SetorModel
                     {
-                        Codigo = equipamento.id_setortrabalho
+                        IdSetorTrabalho = equipamento.id_setortrabalho
                     },
                     Operador = new OperadorModel
                     {
@@ -189,32 +197,44 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
             }
         }
 
-        private static void validaCampos(EquipamentoModel equipamento, bool emEdicao = false)
+        private static void ValidaCampos(EquipamentoModel equipamento, bool emEdicao = false)
         {
             if (equipamento.IdEquipamento <= 0 && emEdicao)
+            {
                 throw new Exception("Para inserir/alterar um equipamento o código deve ser maior que zero (0).");
+            }
 
             if (string.IsNullOrEmpty(equipamento.NmEquipamento))
+            {
                 throw new Exception("Para inserir/alterar um equipamento é obrigatório informar uma descrição.");
+            }
 
             if (equipamento.FgStatus == StatusEquipamento.Indefinido)
+            {
                 throw new Exception("Para inserir/alterar um equipamento é obrigatório informar um Status válido.");
+            }
 
             if ((equipamento.EquipamentoModelo == null) || (equipamento.EquipamentoModelo.Codigo <= 0))
+            {
                 throw new Exception("Para inserir/alterar um equipamento é obrigatório informar um Modelo válido.");
+            }
 
-            if ((equipamento.SetorTrabalho == null) || (equipamento.SetorTrabalho.Codigo <= 0))
+            if ((equipamento.SetorTrabalho == null) || (equipamento.SetorTrabalho.IdSetorTrabalho <= 0))
+            {
                 throw new Exception("Para inserir/alterar um equipamento é obrigatório informar um Setor cadastrado.");
+            }
 
             if (string.IsNullOrEmpty(equipamento.NmIdentificador))
+            {
                 throw new Exception("Para inserir/alterar um equipamento é obrigatório informar um identificador.");
+            }
         }
 
         private void validaIdentificador(string identificador, int codigo)
         {
             if (!String.IsNullOrEmpty(identificador))
             {
-                if (Consultar(identificador, codigo) != null)
+                if (SiagAPI.GetEquipamentoByIdentificador(identificador) != null)
                 {
                     throw new Exception("Identificador já cadastrado para outro Equipamento.");
                 }
@@ -223,14 +243,14 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
 
         public async void Editar(EquipamentoModel equipamento)
         {
-            validaCampos(equipamento, true);
+            ValidaCampos(equipamento, true);
 
             using (var conexao = new SqlConnection(Global.Conexao))
             {
                 var equipamentoAtualizado = await conexao.QueryAsync(sqlUpdate, new
                 {
                     Codigo = equipamento.IdEquipamento,
-                    Setor = equipamento.SetorTrabalho.Codigo,
+                    Setor = equipamento.SetorTrabalho.IdSetorTrabalho,
                     Descricao = equipamento.NmEquipamento,
                     DescricaoAbreviada = equipamento.NmAbreviadoEquipamento,
                     Modelo = equipamento.EquipamentoModelo.Codigo,
@@ -247,8 +267,15 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
         {
             var filtros = new Dictionary<string, object>();
 
-            if ((equipamento != null) && (equipamento.IdEquipamento > 0)) filtros.Add("@id_equipamento", equipamento.IdEquipamento);
-            if ((operador != null) && (operador.IdOperador > 0)) filtros.Add("@id_operador", operador.IdOperador);
+            if ((equipamento != null) && (equipamento.IdEquipamento > 0))
+            {
+                filtros.Add("@id_equipamento", equipamento.IdEquipamento);
+            }
+
+            if ((operador != null) && (operador.IdOperador > 0))
+            {
+                filtros.Add("@id_operador", operador.IdOperador);
+            }
 
             var query = "EXEC sp_siag_logoffoperador @id_operador, @id_equipamento";
 
@@ -264,11 +291,15 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
         {
             var filtros = new Dictionary<string, object>();
 
-            if ((equipamento != null) && (equipamento.IdEquipamento > 0)) filtros.Add("@id_equipamento", equipamento.IdEquipamento);
+            if ((equipamento != null) && (equipamento.IdEquipamento > 0))
+            {
+                filtros.Add("@id_equipamento", equipamento.IdEquipamento);
+            }
 
-            if ((operador != null) && (operador.IdOperador > 0)) filtros.Add("@id_operador", operador.IdOperador);
-
-
+            if ((operador != null) && (operador.IdOperador > 0))
+            {
+                filtros.Add("@id_operador", operador.IdOperador);
+            }
 
             var query = "EXEC sp_siag_loginoperador @id_operador, @id_equipamento";
 

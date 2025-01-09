@@ -13,11 +13,9 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
 
         public async Task<OperadorModel> Consultar(OperadorModel operador)
         {
-            string sql = sqlSelect;
-
             OperadorQuery operadorEncontrado = null;
 
-            if(string.IsNullOrWhiteSpace(operador.NFC))
+            if (string.IsNullOrWhiteSpace(operador.NmNfcOperador))
             {
                 using (var conexao = new SqlConnection(Global.Conexao))
                 {
@@ -27,19 +25,23 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
                         Codigo = operador.IdOperador,
                     });
                 }
-            } else
+            }
+            else
             {
                 using (var conexao = new SqlConnection(Global.Conexao))
                 {
                     String query = sqlSelect + "AND nm_nfcoperador = @Codigo ";
                     operadorEncontrado = await conexao.QueryFirstOrDefaultAsync<OperadorQuery>(query, new
                     {
-                        Codigo = operador.NFC,
+                        Codigo = operador.NmNfcOperador,
                     });
                 }
             }
 
-            if (operadorEncontrado == null) return null;
+            if (operadorEncontrado == null)
+            {
+                return null;
+            }
 
             return new OperadorModel
             {

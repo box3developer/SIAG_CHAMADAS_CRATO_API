@@ -7,7 +7,7 @@ using PATINHAS_RFID_API.Repositories.Interfaces;
 
 namespace PATINHAS_RFID_API.Repositories.Implementations
 {
-    public class EnderecoRepository: IEnderecoRepository
+    public class EnderecoRepository : IEnderecoRepository
     {
         const string sqlSelect = "SELECT id_endereco, id_regiaotrabalho, id_setortrabalho, id_tipoendereco, nm_endereco, qt_estoqueminimo, qt_estoquemaximo, fg_status, tp_preenchimento FROM endereco with(NOLOCK) WHERE 1 = 1 ";
 
@@ -32,7 +32,7 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
                     },
                     SetorTrabalho = new SetorModel
                     {
-                        Codigo = enderecoEncontrado.id_setortrabalho
+                        IdSetorTrabalho = enderecoEncontrado.id_setortrabalho
                     },
                     TipoEndereco = new TipoEndereco
                     {

@@ -50,7 +50,7 @@ namespace PATINHAS_RFID_API.Services.Implementations
             ChamadaModel chamada = new ChamadaModel();
             chamada.Operador = operador;
 
-            EquipamentoModel equipamento = await _equipamentoRepository.Consultar(identificadorEquipamento, 0);
+            EquipamentoModel equipamento = await SiagAPI.GetEquipamentoByIdentificador(identificadorEquipamento);
 
             List<AtividadeRejeicaoModel> motivos = await SiagAPI.GetListaAtividadeRejeicaoAsync();
             ConfiguracaoModel config = new ConfiguracaoModel();
@@ -102,10 +102,10 @@ namespace PATINHAS_RFID_API.Services.Implementations
 
         public async Task<bool> EnviaLocalizacaoEquipamento(string macEquipamento, string retornoEquipamento)
         {
-            var equipamento = await _equipamentoRepository.Consultar(macEquipamento, 0);
-            equipamento.SetorTrabalho = await _setorRepository.Consultar(equipamento.SetorTrabalho);
+            var equipamento = await SiagAPI.GetEquipamentoByIdentificador(macEquipamento);
+            equipamento.SetorTrabalho = await SiagAPI.GetSetorById(equipamento.SetorTrabalho?.IdSetorTrabalho ?? 0);
 
-            var mAreaArmazenagem = string.Concat(equipamento.SetorTrabalho.Codigo.ToString(), retornoEquipamento.AsSpan(0, 5), "01", retornoEquipamento.AsSpan(5, 1));
+            var mAreaArmazenagem = string.Concat(equipamento.SetorTrabalho.IdSetorTrabalho.ToString(), retornoEquipamento.AsSpan(0, 5), "01", retornoEquipamento.AsSpan(5, 1));
             var areaArmazenagem = new AreaArmazenagemModel
             {
                 IdAreaArmazenagem = Convert.ToInt64(mAreaArmazenagem)
@@ -115,7 +115,7 @@ namespace PATINHAS_RFID_API.Services.Implementations
 
             if (areaArmazenagem != null)
             {
-                await _equipamentoRepository.AtualizaMovimentacao(equipamento, areaArmazenagem.Endereco);
+                await SiagAPI.AtualizarEquipamento(equipamento.IdEquipamento, areaArmazenagem.Endereco?.IdEndereco);
             }
 
             return true;
@@ -126,7 +126,7 @@ namespace PATINHAS_RFID_API.Services.Implementations
             EquipamentoModel equipamento = new EquipamentoModel();
             equipamento.NmIdentificador = identificadorEquipamento;
 
-            List<EquipamentoChecklistModel> lstChecklist = await _checkListRepository.ConsultarListaPorEquipamento(equipamento);
+            List<EquipamentoChecklistModel> lstChecklist = await SiagAPI.GetEquipamentosChecklist(equipamento.NmIdentificador);
 
             return lstChecklist;
         }
@@ -137,9 +137,11 @@ namespace PATINHAS_RFID_API.Services.Implementations
             equipamento.NmIdentificador = setCheckListDTO.IdentificadorEquipamento;
 
             //Busca equipamento pelo identificador
-            List<EquipamentoModel> lstEquipamento = await _equipamentoRepository.ConsultarLista(equipamento);
+            //List<EquipamentoModel> lstEquipamento = await _equipamentoRepository.ConsultarLista(equipamento);
             //Utiliza somente a primeira posição pois identificador é único na tabela Equipamento
-            equipamento = lstEquipamento[0];
+            //equipamento = lstEquipamento[0];
+
+            equipamento = await SiagAPI.GetEquipamentoByIdentificador(equipamento.NmIdentificador);
 
             OperadorModel operador = new OperadorModel();
             operador.IdOperador = setCheckListDTO.CodOperador;
@@ -158,8 +160,8 @@ namespace PATINHAS_RFID_API.Services.Implementations
                     checklistOperador.Equipamento = equipamento;
                     checklistOperador.Operador = operador;
                     checklistOperador.Checklist = checklist;
-                    checklistOperador.Resposta = Convert.ToBoolean(int.Parse(item.Value));
-                    checklistOperador.Data = DateTime.Now;
+                    checklistOperador.FgResposta = Convert.ToBoolean(int.Parse(item.Value));
+                    checklistOperador.DtChecklist = DateTime.Now;
 
                     //Insere cada resposta na tabela EquipamentoChecklistOperador
                     _checkListOperadorRepository.Inserir(checklistOperador);

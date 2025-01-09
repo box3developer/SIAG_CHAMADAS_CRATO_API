@@ -1,5 +1,6 @@
 ﻿using PATINHAS_RFID_API.Data;
 using PATINHAS_RFID_API.DTOs;
+using PATINHAS_RFID_API.Integration;
 using PATINHAS_RFID_API.Models.Chamada;
 using PATINHAS_RFID_API.Models.Equipamento;
 using PATINHAS_RFID_API.Models.Operador;
@@ -24,16 +25,21 @@ namespace PATINHAS_RFID_API.Services.Implementations
         public async Task<OperadorModel?> ConsultarOperador(ConsultarOperadorDTO consultarOperadorDTO)
         {
             ChamadaModel chamada = new ChamadaModel();
-            OperadorModel operador = new OperadorModel();
+            OperadorModel? operador = new OperadorModel();
 
-                long codigo;
-                long.TryParse(consultarOperadorDTO.Cracha, out codigo);
+            long.TryParse(consultarOperadorDTO.Cracha, out long codigo);
 
-            if (codigo == 0) operador.NFC = consultarOperadorDTO.Cracha;
-            else operador.IdOperador = codigo;
-            
+            if (codigo == 0)
+            {
+                operador.NmNfcOperador = consultarOperadorDTO.Cracha;
+            }
+            else
+            {
+                operador.IdOperador = codigo;
+            }
+
             //Consulta o operador através do código (crachá)
-            operador = await _operadorRepository.Consultar(operador);
+            operador = await SiagAPI.GetOperador(operador.IdOperador, operador.NmNfcOperador);
 
             if (operador != null)
             {
@@ -50,7 +56,7 @@ namespace PATINHAS_RFID_API.Services.Implementations
                 //Altera todas chamadas ativas do operador
                 foreach (ChamadaModel item in lstChamada)
                 {
-                    _chamadaRepository.ReiniciarChamada(item);
+                    await SiagAPI.ReiniciarChamada(item.IdChamada);
                 }
             }
 
@@ -60,12 +66,14 @@ namespace PATINHAS_RFID_API.Services.Implementations
             // equipamentoBO.editar(identificadorEquipamento, operador);
 
             // método de login, já executa o logoff de outros operadores/equipamentos automaticamente
-            EquipamentoModel equipamento = await _equipamentoRepository.Consultar(consultarOperadorDTO.IdentificadorEquipamento);
+            EquipamentoModel equipamento = await SiagAPI.GetEquipamentoByIdentificador(consultarOperadorDTO.IdentificadorEquipamento);
 
             if (equipamento == null)
+            {
                 throw new Exception("Equipamento não encontrado");
+            }
 
-            _equipamentoRepository.LoginOperador(equipamento, operador);
+            await SiagAPI.LoginOperador(operador.IdOperador, equipamento.IdEquipamento);
 
             return operador;
         }
@@ -74,13 +82,13 @@ namespace PATINHAS_RFID_API.Services.Implementations
         {
             try
             {
-                EquipamentoModel equipamento = await _equipamentoRepository.Consultar(identificadorEquipamento);
+                EquipamentoModel equipamento = await SiagAPI.GetEquipamentoByIdentificador(identificadorEquipamento);
                 OperadorModel operador = new OperadorModel();
                 Int64 codigo = 0;
                 Int64.TryParse(cracha, out codigo);
                 operador.IdOperador = codigo;
 
-                _equipamentoRepository.LogoffOperador(equipamento, operador);
+                await SiagAPI.LogoffOperador(operador.IdOperador, equipamento.IdEquipamento);
 
                 return true;
             }

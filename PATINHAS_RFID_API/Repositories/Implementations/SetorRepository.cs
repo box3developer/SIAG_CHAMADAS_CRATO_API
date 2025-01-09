@@ -21,17 +21,17 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
             {
                 var setorEncontrado = (await conexao.QueryFirstOrDefaultAsync<SetorQuery>(sql, new
                 {
-                    Codigo = setor.Codigo
+                    Codigo = setor.IdSetorTrabalho
                 }));
 
                 return new SetorModel
                 {
-                    Codigo = setorEncontrado.id_setortrabalho,
+                    IdSetorTrabalho = setorEncontrado.id_setortrabalho,
                     Deposito = new DepositoModel
                     {
                         Codigo = setorEncontrado.id_deposito
                     },
-                    Descricao = setorEncontrado.nm_setortrabalho
+                    NmSetorTrabalho = setorEncontrado.nm_setortrabalho
                 };
             }
         }

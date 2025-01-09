@@ -2,6 +2,7 @@
 using grendene_caracois_api_csharp;
 using Microsoft.Data.SqlClient;
 using PATINHAS_RFID_API.Data;
+using PATINHAS_RFID_API.Integration;
 using PATINHAS_RFID_API.Models;
 using PATINHAS_RFID_API.Models.AreaArmazenagem;
 using PATINHAS_RFID_API.Models.Pallet;
@@ -13,7 +14,7 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
     {
         const string sqlSelect = "SELECT id_pallet, id_areaarmazenagem, id_agrupador, fg_status, qt_utilizacao, dt_ultimamovimentacao, cd_identificacao FROM pallet with (nolock) WHERE 1 = 1 ";
         const string sqlInsert = "INSERT INTO pallet (id_pallet, id_areaarmazenagem, id_agrupador, fg_status, qt_utilizacao, dt_ultimamovimentacao, cd_identificacao) VALUES (@Codigo, @AreaArmazenagem, @Agrupador, @Status, @QtUtilizacao, @DataUltimaMovimentacao, @Identificacao)";
-        
+
         public async Task<PalletModel> Consultar(string identificador, int codigo = 0)
         {
             string sql = sqlSelect;
@@ -28,7 +29,10 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
                     Codigo = codigo,
                 });
 
-                if (pallet == null) return null;
+                if (pallet == null)
+                {
+                    return null;
+                }
 
                 return new PalletModel
                 {
@@ -52,17 +56,21 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
         private static void ValidaCampos(PalletModel pallet, bool emEdicao = false)
         {
             if (pallet.IdPallet <= 0 && emEdicao)
+            {
                 throw new Exception("Para inserir/alterar um pallet o código deve ser maior que zero (0).");
+            }
 
             if ((int)pallet.FgStatus <= 0)
+            {
                 throw new Exception("Para inserir/alterar um pallet é obrigatório informar status.");
+            }
         }
 
-        private void validaIdentificador(string identificador, int codigo = 0)
+        private void ValidaIdentificador(string identificador, int codigo = 0)
         {
             if (!String.IsNullOrEmpty(identificador))
             {
-                if (Consultar(identificador, codigo) != null)
+                if (SiagAPI.GetPalletByIdenfificador(identificador, codigo) != null)
                 {
                     throw new Exception("Identificador já cadastrado para outro Pallet.");
                 }
@@ -72,34 +80,37 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
         public async Task<bool> Inserir(PalletModel pallet)
         {
             ValidaCampos(pallet);
-            validaIdentificador(pallet.CdIdentificacao, pallet.IdPallet);
+            ValidaIdentificador(pallet.CdIdentificacao, pallet.IdPallet);
 
-            var filtros = new Dictionary<string, object>();
+            await SiagAPI.InsertPallet(pallet);
 
-            filtros.Add("@Codigo", pallet.IdPallet);
-            filtros.Add("@Status", (int)pallet.FgStatus);
-            filtros.Add("@QtUtilizacao", pallet.QtUtilizacao);
+            return true;
+            //var filtros = new Dictionary<string, object>();
 
-            if (pallet.AreaArmazenagem == null) filtros.Add("@AreaArmazenagem", DBNull.Value);
-            else filtros.Add("@AreaArmazenagem", pallet.AreaArmazenagem.IdAreaArmazenagem);
+            //filtros.Add("@Codigo", pallet.IdPallet);
+            //filtros.Add("@Status", (int)pallet.FgStatus);
+            //filtros.Add("@QtUtilizacao", pallet.QtUtilizacao);
 
-            if ((pallet.Agrupador == null) || (pallet.Agrupador.Codigo == Guid.Empty)) filtros.Add("@Agrupador", DBNull.Value);
-            else filtros.Add("@Agrupador", pallet.Agrupador.Codigo);
+            //if (pallet.AreaArmazenagem == null) filtros.Add("@AreaArmazenagem", DBNull.Value);
+            //else filtros.Add("@AreaArmazenagem", pallet.AreaArmazenagem.IdAreaArmazenagem);
 
-            if (pallet.DtUltimaMovimentacao == null) filtros.Add("@DataUltimaMovimentacao", DBNull.Value);
-            else filtros.Add("@DataUltimaMovimentacao", pallet.DtUltimaMovimentacao);
+            //if ((pallet.Agrupador == null) || (pallet.Agrupador.Codigo == Guid.Empty)) filtros.Add("@Agrupador", DBNull.Value);
+            //else filtros.Add("@Agrupador", pallet.Agrupador.Codigo);
 
-            if (pallet.CdIdentificacao == null) filtros.Add("@Identificacao", DBNull.Value);
-            else filtros.Add("@Identificacao", pallet.CdIdentificacao);
+            //if (pallet.DtUltimaMovimentacao == null) filtros.Add("@DataUltimaMovimentacao", DBNull.Value);
+            //else filtros.Add("@DataUltimaMovimentacao", pallet.DtUltimaMovimentacao);
 
-            var parametros = new DynamicParameters(filtros);
+            //if (pallet.CdIdentificacao == null) filtros.Add("@Identificacao", DBNull.Value);
+            //else filtros.Add("@Identificacao", pallet.CdIdentificacao);
 
-            using (var conexao = new SqlConnection(Global.Conexao))
-            {
-                var palletEncontrado = await conexao.ExecuteAsync(sqlInsert, parametros);
+            //var parametros = new DynamicParameters(filtros);
 
-                return palletEncontrado > 0;
-            }
+            //using (var conexao = new SqlConnection(Global.Conexao))
+            //{
+            //    var palletEncontrado = await conexao.ExecuteAsync(sqlInsert, parametros);
+
+            //    return palletEncontrado > 0;
+            //}
         }
     }
 
