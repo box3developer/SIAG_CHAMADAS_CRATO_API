@@ -20,7 +20,7 @@ public class ChamadaTarefaRepository : IChamadaTarefaRepository
 
     public async Task Editar(ChamadaTarefaModel chamadaTarefa)
     {
-        await SiagAPI.UpdateChamadaTarefa(chamadaTarefa);
+        await SiagAPI.UpdateChamadaTarefaAsync(chamadaTarefa);
     }
 
     public async Task<List<ChamadaTarefaModel>> ConsultarLista(ChamadaTarefaModel? chamadaTarefa = null)
@@ -28,11 +28,11 @@ public class ChamadaTarefaRepository : IChamadaTarefaRepository
         var chamadas = new List<ChamadaTarefaModel>();
         if (chamadaTarefa != null)
         {
-            chamadas = await SiagAPI.GetChamadasTarefasById(chamadaTarefa.Chamada.IdChamada, chamadaTarefa.Tarefa.IdTarefa);
+            chamadas = await SiagAPI.GetChamadasTarefasByIdAsync(chamadaTarefa.Chamada.IdChamada, chamadaTarefa.Tarefa.IdTarefa);
         }
         else
         {
-            chamadas = await SiagAPI.GetListaChamadasTarefas();
+            chamadas = await SiagAPI.GetListaChamadasTarefasAsync();
         }
 
         chamadas = chamadas.Select(x => new ChamadaTarefaModel

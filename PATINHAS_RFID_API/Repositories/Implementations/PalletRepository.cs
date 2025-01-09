@@ -70,7 +70,7 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
         {
             if (!String.IsNullOrEmpty(identificador))
             {
-                if (SiagAPI.GetPalletByIdenfificador(identificador, codigo) != null)
+                if (SiagAPI.GetPalletByIdenfificadorAsync(identificador, codigo) != null)
                 {
                     throw new Exception("Identificador já cadastrado para outro Pallet.");
                 }
@@ -82,7 +82,7 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
             ValidaCampos(pallet);
             ValidaIdentificador(pallet.CdIdentificacao, pallet.IdPallet);
 
-            await SiagAPI.InsertPallet(pallet);
+            await SiagAPI.InsertPalletAsync(pallet);
 
             return true;
             //var filtros = new Dictionary<string, object>();

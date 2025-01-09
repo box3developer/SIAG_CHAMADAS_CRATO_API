@@ -47,7 +47,7 @@ public class ChamadaRepository : IChamadaRepository
 
     public async Task<ChamadaModel> Consultar(ChamadaModel chamada)
     {
-        var chamadaEncontrada = await SiagAPI.GetChamadaById(chamada.IdChamada);
+        var chamadaEncontrada = await SiagAPI.GetChamadaByIdAsync(chamada.IdChamada);
 
         if (chamadaEncontrada == null)
         {
@@ -146,7 +146,7 @@ public class ChamadaRepository : IChamadaRepository
 
         if (chamadaFormatada.PalletOrigem != null)
         {
-            var palletO = await SiagAPI.GetPalletById(chamadaFormatada.PalletDestino.IdPallet);
+            var palletO = await SiagAPI.GetPalletByIdAsync(chamadaFormatada.PalletDestino.IdPallet);
             if (palletO != null)
             {
                 chamadaFormatada.PalletOrigem = new PalletModel
@@ -168,7 +168,7 @@ public class ChamadaRepository : IChamadaRepository
 
         if (chamadaFormatada.PalletDestino != null)
         {
-            var palletD = await SiagAPI.GetPalletById(chamadaFormatada.PalletDestino.IdPallet);
+            var palletD = await SiagAPI.GetPalletByIdAsync(chamadaFormatada.PalletDestino.IdPallet);
 
             if (palletD != null)
             {
@@ -237,21 +237,24 @@ public class ChamadaRepository : IChamadaRepository
 
     public async Task<ChamadaModel?> SelecionaChamadaEquipamento(ChamadaModel chamada)
     {
-        var filtros = new Dictionary<string, object>();
-        filtros.Add("@id_operador", chamada.Operador.IdOperador);
-        filtros.Add("@id_equipamento", chamada.Equipamento.IdEquipamento);
+        //var filtros = new Dictionary<string, object>
+        //{
+        //    { "@id_operador", chamada.Operador.IdOperador },
+        //    { "@id_equipamento", chamada.Equipamento.IdEquipamento }
+        //};
 
-        var parametros = new DynamicParameters(filtros);
-        parametros.Add("@id_chamada", dbType: DbType.Guid, direction: ParameterDirection.Output);
+        //var parametros = new DynamicParameters(filtros);
+        //parametros.Add("@id_chamada", dbType: DbType.Guid, direction: ParameterDirection.Output);
 
-        var query = "EXEC sp_siag_selecionachamada @id_operador, @id_equipamento, @id_chamada output";
+        //var query = "EXEC sp_siag_selecionachamada @id_operador, @id_equipamento, @id_chamada output";
 
-        using (var conexao = new SqlConnection(Global.Conexao))
-        {
-            var linhas = await conexao.ExecuteAsync(query, parametros);
-        }
+        //using (var conexao = new SqlConnection(Global.Conexao))
+        //{
+        //    var linhas = await conexao.ExecuteAsync(query, parametros);
+        //}
 
-        Guid? outputValido = parametros.Get<Guid?>("@id_chamada");
+        //Guid? outputValido = parametros.Get<Guid?>("@id_chamada");
+        Guid? outputValido = await SiagAPI.SelecionarChamadaAsync(chamada);
 
         if (Guid.Empty == outputValido || outputValido == null)
         {
@@ -269,7 +272,7 @@ public class ChamadaRepository : IChamadaRepository
         chamada.IdEquipamento = chamada.Equipamento?.IdEquipamento ?? 0;
         chamada.IdOperador = chamada.Operador?.IdOperador ?? 0;
 
-        await SiagAPI.AtribuirChamada(chamada);
+        await SiagAPI.AtribuirChamadaAsync(chamada);
 
         //string sql = "UPDATE chamada SET " +
         //    " fg_status = @Status, id_operador = @Operador, id_equipamento = @Equipamento, dt_recebida = GETDATE() " +
@@ -410,7 +413,7 @@ public class ChamadaRepository : IChamadaRepository
             throw new Exception("É obrigatório informar uma Chamada Tarefa!");
         }
 
-        await SiagAPI.UpdateChamadaTarefa(chamadaTarefa);
+        await SiagAPI.UpdateChamadaTarefaAsync(chamadaTarefa);
     }
 
     public async Task<bool> FinalizarChamada(ChamadaModel chamada)
@@ -552,6 +555,7 @@ public class ChamadaRepository : IChamadaRepository
 
         var parameters = new DynamicParameters(filtros);
 
+
         using (var conexao = new SqlConnection(Global.Conexao))
         {
             var lista = (await conexao.QueryAsync<ChamadaQuery>(sql, parameters)).ToList();
@@ -654,5 +658,113 @@ public class ChamadaRepository : IChamadaRepository
 
             return listaFormatada;
         }
+    }
+
+    public async Task<List<ChamadaModel>> ConsultarListaNew(ChamadaModel? chamada = null, List<StatusChamada>? listaStatus = null)
+    {
+        var lista = await SiagAPI.ConsultarChamadaAsync(new()
+        {
+            Chamada = chamada,
+            ListaStatusChamada = listaStatus ?? new()
+        });
+
+        var listaFormatada = new List<ChamadaModel>();
+
+        foreach (var chamadaEncontrada in lista)
+        {
+            var chamadaFormatada = new ChamadaModel
+            {
+                IdChamada = chamadaEncontrada.IdChamada,
+                FgStatus = chamadaEncontrada.FgStatus,
+                DtChamada = chamadaEncontrada.DtChamada,
+                DtRecebida = chamadaEncontrada.DtRecebida,
+                DtAtendida = chamadaEncontrada.DtAtendida,
+                DtFinalizada = chamadaEncontrada.DtFinalizada,
+                DtRejeitada = chamadaEncontrada.DtRejeitada,
+                DtSuspensa = null,
+            };
+
+            if (chamadaEncontrada.IdPalletOrigem != 0)
+            {
+                chamadaFormatada.PalletOrigem = new()
+                {
+                    IdPallet = chamadaEncontrada.IdPalletOrigem
+                };
+            }
+
+            if (chamadaEncontrada.IdPalletDestino != 0)
+            {
+                chamadaFormatada.PalletDestino = new()
+                {
+                    IdPallet = chamadaEncontrada.IdPalletDestino
+                };
+            }
+            if (chamadaEncontrada.IdPalletLeitura != 0)
+            {
+                chamadaFormatada.PalletLeitura = new()
+                {
+                    IdPallet = chamadaEncontrada.IdPalletLeitura
+                };
+            }
+
+            if (chamadaEncontrada.IdAreaArmazenagemOrigem != 0)
+            {
+                chamadaFormatada.AreaArmazenagemOrigem = new()
+                {
+                    IdAreaArmazenagem = chamadaEncontrada.IdAreaArmazenagemOrigem
+                };
+            }
+            if (chamadaEncontrada.IdAreaArmazenagemDestino != 0)
+            {
+                chamadaFormatada.AreaArmazenagemDestino = new()
+                {
+                    IdAreaArmazenagem = chamadaEncontrada.IdAreaArmazenagemDestino
+                };
+            }
+            if (chamadaEncontrada.IdAreaArmazenagemLeitura != 0)
+            {
+                chamadaFormatada.AreaArmazenagemLeitura = new()
+                {
+                    IdAreaArmazenagem = chamadaEncontrada.IdAreaArmazenagemLeitura
+                };
+            }
+            if (chamadaEncontrada.IdOperador != 0)
+            {
+                chamadaFormatada.Operador = new()
+                {
+                    IdOperador = chamadaEncontrada.IdOperador
+                };
+            }
+            if (chamadaEncontrada.IdEquipamento != 0)
+            {
+                chamadaFormatada.Equipamento = new()
+                {
+                    IdEquipamento = chamadaEncontrada.IdEquipamento
+                };
+            }
+            if (chamadaEncontrada.IdAtividadeRejeicao != 0)
+            {
+                chamadaFormatada.AtividadeRejeicao = new()
+                {
+                    IdAtividadeRejeicao = chamadaEncontrada.IdAtividadeRejeicao
+                };
+            }
+            if (chamadaEncontrada.IdAtividade != 0)
+            {
+                chamadaFormatada.Atividade = new()
+                {
+                    IdAtividade = chamadaEncontrada.IdAtividade
+                };
+            }
+
+            if (chamadaEncontrada.IdChamadaSuspensa != Guid.Empty)
+            {
+                chamadaFormatada.IdChamadaSuspensa = chamadaEncontrada.IdChamadaSuspensa;
+            }
+
+            listaFormatada.Add(chamadaFormatada);
+        }
+
+        return listaFormatada;
     }
 }

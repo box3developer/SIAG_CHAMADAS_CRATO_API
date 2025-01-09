@@ -19,5 +19,6 @@ namespace PATINHAS_RFID_API.Repositories.Interfaces
         public Task<bool> RejeitarChamada(ChamadaModel chamada);
         public void ReiniciarChamada(ChamadaModel chamada);
         public Task<List<ChamadaModel>> ConsultarLista(ChamadaModel? chamada = null, List<StatusChamada>? listaStatus = null);
+        public Task<List<ChamadaModel>> ConsultarListaNew(ChamadaModel? chamada = null, List<StatusChamada>? listaStatus = null);
     }
 }

@@ -1,6 +1,7 @@
 ﻿using grendene_caracois_api_csharp;
 using PATINHAS_RFID_API.Data;
 using PATINHAS_RFID_API.DTOs;
+using PATINHAS_RFID_API.DTOs.Chamada;
 using PATINHAS_RFID_API.DTOs.Equipamento;
 using PATINHAS_RFID_API.DTOs.Operador;
 using PATINHAS_RFID_API.DTOs.Pallet;
@@ -25,7 +26,8 @@ public class SiagAPI
     private static readonly HttpClient client = new();
     private static readonly string siagURL = Global.SiagAPI;
 
-    public static async Task<AreaArmazenagemModel> GetAreaArmazenagemByIdAsync(long id)
+    /** AreaArmazenagem **/
+    public static async Task<AreaArmazenagemModel?> GetAreaArmazenagemByIdAsync(long id)
     {
         try
         {
@@ -33,7 +35,7 @@ public class SiagAPI
 
             var areaArmazenagem = await client.GetFromJsonAsync<AreaArmazenagemModel>(url);
 
-            return areaArmazenagem ?? new();
+            return areaArmazenagem;
         }
         catch (Exception ex)
         {
@@ -58,6 +60,7 @@ public class SiagAPI
     }
 
 
+    /** AtividadeRejeicao **/
     public static async Task<List<AtividadeRejeicaoModel>> GetListaAtividadeRejeicaoAsync()
     {
         try
@@ -75,7 +78,8 @@ public class SiagAPI
     }
 
 
-    public static async Task<AtividadeModel> GetAtividadeById(int id)
+    /** Atividade **/
+    public static async Task<AtividadeModel> GetAtividadeByIdAsync(int id)
     {
         try
         {
@@ -92,7 +96,8 @@ public class SiagAPI
     }
 
 
-    public static async Task<AtividadeRotinaModel> GetAtividadeRotinaById(int id)
+    /** AtividadeRotina **/
+    public static async Task<AtividadeRotinaModel> GetAtividadeRotinaByIdAsync(int id)
     {
         try
         {
@@ -109,7 +114,8 @@ public class SiagAPI
     }
 
 
-    public static async Task<AtividadeTarefaModel> GetAtividadeTarefaById(int id)
+    /** AtividadeTarefa **/
+    public static async Task<AtividadeTarefaModel> GetAtividadeTarefaByIdAsync(int id)
     {
         try
         {
@@ -125,7 +131,7 @@ public class SiagAPI
         }
     }
 
-    public static async Task<List<AtividadeTarefaModel>> GetListaAtividadeTarefa(AtividadeTarefaModel? filtro)
+    public static async Task<List<AtividadeTarefaModel>> GetListaAtividadeTarefaAsync(AtividadeTarefaModel? filtro)
     {
         try
         {
@@ -163,7 +169,9 @@ public class SiagAPI
         }
     }
 
-    public static async Task<ChamadaModel?> GetChamadaById(Guid id)
+
+    /** Chamada **/
+    public static async Task<ChamadaModel?> GetChamadaByIdAsync(Guid id)
     {
         try
         {
@@ -179,7 +187,7 @@ public class SiagAPI
         }
     }
 
-    public static async Task<bool> AtribuirChamada(ChamadaModel chamada)
+    public static async Task<bool> AtribuirChamadaAsync(ChamadaModel chamada)
     {
         try
         {
@@ -195,7 +203,7 @@ public class SiagAPI
         }
     }
 
-    public static async Task<bool> RejeitarChamada(Guid id)
+    public static async Task<bool> RejeitarChamadaAsync(Guid id)
     {
         try
         {
@@ -211,7 +219,7 @@ public class SiagAPI
         }
     }
 
-    public static async Task<bool> AlterarStatusChamada(Guid id, StatusChamada status)
+    public static async Task<bool> AlterarStatusChamadaAsync(Guid id, StatusChamada status)
     {
         try
         {
@@ -227,7 +235,7 @@ public class SiagAPI
         }
     }
 
-    public static async Task<bool> FinalizarChamada(Guid id)
+    public static async Task<bool> FinalizarChamadaAsync(Guid id)
     {
         try
         {
@@ -243,7 +251,7 @@ public class SiagAPI
         }
     }
 
-    public static async Task<bool> ReiniciarChamada(Guid id)
+    public static async Task<bool> ReiniciarChamadaAsync(Guid id)
     {
         try
         {
@@ -259,7 +267,7 @@ public class SiagAPI
         }
     }
 
-    public static async Task<Guid> SelecionarChamada(ChamadaModel chamada)
+    public static async Task<Guid> SelecionarChamadaAsync(ChamadaModel chamada)
     {
         try
         {
@@ -270,13 +278,48 @@ public class SiagAPI
 
             return id;
         }
+        catch
+        {
+            return Guid.Empty;
+        }
+    }
+
+    public static async Task<List<ChamadaModel>> ConsultarChamadaAsync(ChamadaFiltroDTO chamada)
+    {
+        try
+        {
+            string url = $"{siagURL}/Chamada";
+
+            var response = await client.PostAsJsonAsync(url, chamada);
+            var chamadas = await response.Content.ReadFromJsonAsync<List<ChamadaModel>>();
+
+            return chamadas ?? new();
+        }
         catch (Exception ex)
         {
             throw new Exception(ex.Message);
         }
     }
 
-    public static async Task<PalletModel?> GetPalletById(int id)
+    public static async Task<bool> AtualizarLeituraChamadaAsync(ChamadaLeituraDTO leitura)
+    {
+        try
+        {
+            string url = $"{siagURL}/Chamada/atualizar-leitura";
+
+            await client.PostAsJsonAsync(url, leitura);
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.Message);
+        }
+    }
+
+
+    /** Pallet **/
+    public static async Task<PalletModel?> GetPalletByIdAsync(int id)
     {
         try
         {
@@ -292,8 +335,47 @@ public class SiagAPI
         }
     }
 
+    public static async Task<bool> InsertPalletAsync(PalletModel pallet)
+    {
+        try
+        {
+            string url = $"{siagURL}/Pallet";
 
-    public static async Task<List<ChamadaTarefaModel>> GetChamadasTarefasById(Guid idChamada, int idTarefa)
+            await client.PostAsJsonAsync(url, pallet);
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.Message);
+        }
+    }
+
+    public static async Task<PalletModel?> GetPalletByIdenfificadorAsync(string identificador, int id = 0)
+    {
+        try
+        {
+            string url = $"{siagURL}/identificador";
+
+            var response = await client.PostAsJsonAsync<PalletFiltroDTO>(url, new()
+            {
+                CdIdentificador = identificador,
+                IdPallet = id,
+            });
+
+            var pallet = await response.Content.ReadFromJsonAsync<PalletModel>();
+
+            return pallet;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.Message);
+        }
+    }
+
+
+    /** ChamadaTarefas **/
+    public static async Task<List<ChamadaTarefaModel>> GetChamadasTarefasByIdAsync(Guid idChamada, int idTarefa)
     {
         try
         {
@@ -309,7 +391,7 @@ public class SiagAPI
         }
     }
 
-    public static async Task<List<ChamadaTarefaModel>> GetListaChamadasTarefas()
+    public static async Task<List<ChamadaTarefaModel>> GetListaChamadasTarefasAsync()
     {
         try
         {
@@ -325,7 +407,7 @@ public class SiagAPI
         }
     }
 
-    public static async Task<bool> UpdateChamadaTarefa(ChamadaTarefaModel chamadaTareda)
+    public static async Task<bool> UpdateChamadaTarefaAsync(ChamadaTarefaModel chamadaTareda)
     {
         try
         {
@@ -342,7 +424,8 @@ public class SiagAPI
     }
 
 
-    public static async Task<bool> InsertChecklistOperador(EquipamentoChecklistOperadorModel checklist)
+    /** ChecklistOperador **/
+    public static async Task<bool> InsertChecklistOperadorAsync(EquipamentoChecklistOperadorModel checklist)
     {
         try
         {
@@ -358,7 +441,7 @@ public class SiagAPI
         }
     }
 
-    public static async Task<List<EquipamentoChecklistModel>> GetEquipamentosChecklist(string identificador)
+    public static async Task<List<EquipamentoChecklistModel>> GetEquipamentosChecklistAsync(string identificador)
     {
         try
         {
@@ -375,7 +458,8 @@ public class SiagAPI
     }
 
 
-    public static async Task<EnderecoModel> GetEndereco(int idEndereco)
+    /** Endereco **/
+    public static async Task<EnderecoModel> GetEnderecoByIdAsync(int idEndereco)
     {
         try
         {
@@ -401,7 +485,8 @@ public class SiagAPI
     }
 
 
-    public static async Task<EquipamentoModel> GetEquipamentoByIdentificador(string identificador)
+    /** Equipamento **/
+    public static async Task<EquipamentoModel> GetEquipamentoByIdentificadorAsync(string identificador)
     {
         try
         {
@@ -427,7 +512,7 @@ public class SiagAPI
         }
     }
 
-    public static async Task<bool> AtualizarEquipamento(int idEquipamento, int? idEndereco = null)
+    public static async Task<bool> AtualizarEquipamentoAsync(int idEquipamento, int? idEndereco = null)
     {
         try
         {
@@ -448,48 +533,8 @@ public class SiagAPI
     }
 
 
-    public static async Task<bool> LoginOperador(long idOperador, int idEquipamento)
-    {
-        try
-        {
-            string url = $"{siagURL}/Operador/login";
-
-            await client.PostAsJsonAsync<OperadorLoginDTO>(url, new()
-            {
-                IdOperador = idOperador,
-                IdEquipamento = idEquipamento,
-            });
-
-            return true;
-        }
-        catch (Exception ex)
-        {
-            throw new Exception(ex.Message);
-        }
-    }
-
-    public static async Task<bool> LogoffOperador(long idOperador, int idEquipamento)
-    {
-        try
-        {
-            string url = $"{siagURL}/Operador/logoff";
-
-            await client.PostAsJsonAsync<OperadorLoginDTO>(url, new()
-            {
-                IdOperador = idOperador,
-                IdEquipamento = idEquipamento,
-            });
-
-            return true;
-        }
-        catch (Exception ex)
-        {
-            throw new Exception(ex.Message);
-        }
-    }
-
-
-    public static async Task<bool> InsertLog(string mensagem)
+    /** Log **/
+    public static async Task<bool> InsertLogAsync(string mensagem)
     {
         try
         {
@@ -506,7 +551,8 @@ public class SiagAPI
     }
 
 
-    public static async Task<OperadorModel?> GetOperador(long cracha, string nfc = "")
+    /** Operador **/
+    public static async Task<OperadorModel?> GetOperadorAsync(long cracha, string nfc = "")
     {
         try
         {
@@ -531,14 +577,17 @@ public class SiagAPI
         }
     }
 
-
-    public static async Task<bool> InsertPallet(PalletModel pallet)
+    public static async Task<bool> LoginOperadorAsync(long idOperador, int idEquipamento)
     {
         try
         {
-            string url = $"{siagURL}/Pallet";
+            string url = $"{siagURL}/Operador/login";
 
-            await client.PostAsJsonAsync(url, pallet);
+            await client.PostAsJsonAsync<OperadorLoginDTO>(url, new()
+            {
+                IdOperador = idOperador,
+                IdEquipamento = idEquipamento,
+            });
 
             return true;
         }
@@ -548,21 +597,19 @@ public class SiagAPI
         }
     }
 
-    public static async Task<PalletModel?> GetPalletByIdenfificador(string identificador, int id = 0)
+    public static async Task<bool> LogoffOperadorAsync(long idOperador, int idEquipamento)
     {
         try
         {
-            string url = $"{siagURL}/identificador";
+            string url = $"{siagURL}/Operador/logoff";
 
-            var response = await client.PostAsJsonAsync<PalletFiltroDTO>(url, new()
+            await client.PostAsJsonAsync<OperadorLoginDTO>(url, new()
             {
-                CdIdentificador = identificador,
-                IdPallet = id,
+                IdOperador = idOperador,
+                IdEquipamento = idEquipamento,
             });
 
-            var pallet = await response.Content.ReadFromJsonAsync<PalletModel>();
-
-            return pallet;
+            return true;
         }
         catch (Exception ex)
         {
@@ -571,7 +618,8 @@ public class SiagAPI
     }
 
 
-    public static async Task<SetorModel?> GetSetorById(int id)
+    /** Setor **/
+    public static async Task<SetorModel?> GetSetorByIdAsync(int id)
     {
         try
         {

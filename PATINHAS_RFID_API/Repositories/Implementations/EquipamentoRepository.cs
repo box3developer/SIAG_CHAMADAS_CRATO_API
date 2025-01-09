@@ -234,7 +234,7 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
         {
             if (!String.IsNullOrEmpty(identificador))
             {
-                if (SiagAPI.GetEquipamentoByIdentificador(identificador) != null)
+                if (SiagAPI.GetEquipamentoByIdentificadorAsync(identificador) != null)
                 {
                     throw new Exception("Identificador já cadastrado para outro Equipamento.");
                 }

@@ -15,7 +15,7 @@ namespace PATINHAS_RFID_API.Repositories.Implementations
             checklistOperador.IdEquipamento = checklistOperador.Equipamento?.IdEquipamento ?? 0;
             checklistOperador.IdOperador = checklistOperador.Operador?.IdOperador ?? 0;
 
-            await SiagAPI.InsertChecklistOperador(checklistOperador);
+            await SiagAPI.InsertChecklistOperadorAsync(checklistOperador);
 
             return true;
 

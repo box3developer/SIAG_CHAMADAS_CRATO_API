@@ -123,13 +123,13 @@ public class AtividadeTarefaRepository : IAtividadeTarefaRepository
                             else if (chave[i].ToLower().Contains("enderecoori"))
                             {
                                 areaOrigem = await SiagAPI.GetAreaArmazenagemByIdAsync(chamada?.AreaArmazenagemOrigem?.IdAreaArmazenagem ?? 0);
-                                enderecoOrigem = await SiagAPI.GetEndereco(areaOrigem.Endereco?.IdEndereco ?? 0);
+                                enderecoOrigem = await SiagAPI.GetEnderecoByIdAsync(areaOrigem.Endereco?.IdEndereco ?? 0);
                                 item.NmMensagem = item.NmMensagem.Replace("#" + chave[i] + "#", enderecoOrigem.NmEndereco);
                             }
                             else if (chave[i].ToLower().Contains("enderecodes"))
                             {
                                 areaDestino = await SiagAPI.GetAreaArmazenagemByIdAsync(chamada?.AreaArmazenagemDestino?.IdAreaArmazenagem ?? 0);
-                                enderecoDestino = await SiagAPI.GetEndereco(areaDestino.Endereco?.IdEndereco ?? 0);
+                                enderecoDestino = await SiagAPI.GetEnderecoByIdAsync(areaDestino.Endereco?.IdEndereco ?? 0);
                                 item.NmMensagem = item.NmMensagem.Replace("#" + chave[i] + "#", enderecoDestino.NmEndereco);
                             }
                         }
@@ -147,7 +147,7 @@ public class AtividadeTarefaRepository : IAtividadeTarefaRepository
 
     public async Task<List<AtividadeTarefaModel>> ConsultarLista(AtividadeTarefaModel? atividade = null, ChamadaModel? chamada = null)
     {
-        List<AtividadeTarefaModel> atividades = await SiagAPI.GetListaAtividadeTarefa(atividade);
+        List<AtividadeTarefaModel> atividades = await SiagAPI.GetListaAtividadeTarefaAsync(atividade);
         if (chamada != null)
         {
             AjustaMensagens(chamada, atividades);
