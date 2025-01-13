@@ -54,95 +54,7 @@ public class ChamadaRepository : IChamadaRepository
             return null;
         }
 
-        var chamadaFormatada = new ChamadaModel
-        {
-            IdChamada = chamadaEncontrada.IdChamada,
-            FgStatus = (StatusChamada)chamadaEncontrada.FgStatus,
-            DtChamada = chamadaEncontrada.DtChamada,
-            DtRecebida = chamadaEncontrada.DtRecebida,
-            DtAtendida = chamadaEncontrada.DtRecebida,
-            DtFinalizada = chamadaEncontrada.DtFinalizada,
-            DtRejeitada = chamadaEncontrada.DtRejeitada,
-            DtSuspensa = null
-        };
-
-        if (chamadaEncontrada.IdPalletOrigem != 0)
-        {
-            chamadaFormatada.PalletOrigem = new PalletModel
-            {
-                IdPallet = chamadaEncontrada.IdPalletOrigem
-            };
-        }
-
-        if (chamadaEncontrada.IdPalletDestino != 0)
-        {
-            chamadaFormatada.PalletDestino = new PalletModel
-            {
-                IdPallet = chamadaEncontrada.IdPalletDestino
-            };
-        }
-        if (chamadaEncontrada.IdPalletLeitura != 0)
-        {
-            chamadaFormatada.PalletLeitura = new PalletModel
-            {
-                IdPallet = chamadaEncontrada.IdPalletLeitura
-            };
-        }
-
-        if (chamadaEncontrada.IdAreaArmazenagemOrigem != 0)
-        {
-            chamadaFormatada.AreaArmazenagemOrigem = new AreaArmazenagemModel
-            {
-                IdAreaArmazenagem = chamadaEncontrada.IdAreaArmazenagemOrigem
-            };
-        }
-        if (chamadaEncontrada.IdAreaArmazenagemDestino != 0)
-        {
-            chamadaFormatada.AreaArmazenagemDestino = new AreaArmazenagemModel
-            {
-                IdAreaArmazenagem = chamadaEncontrada.IdAreaArmazenagemDestino
-            };
-        }
-        if (chamadaEncontrada.IdAreaArmazenagemLeitura != 0)
-        {
-            chamadaFormatada.AreaArmazenagemLeitura = new AreaArmazenagemModel
-            {
-                IdAreaArmazenagem = chamadaEncontrada.IdAreaArmazenagemLeitura
-            };
-        }
-        if (chamadaEncontrada.IdOperador != 0)
-        {
-            chamadaFormatada.Operador = new OperadorModel
-            {
-                IdOperador = chamadaEncontrada.IdOperador
-            };
-        }
-        if (chamadaEncontrada.IdEquipamento != 0)
-        {
-            chamadaFormatada.Equipamento = new EquipamentoModel
-            {
-                IdEquipamento = chamadaEncontrada.IdEquipamento
-            };
-        }
-        if (chamadaEncontrada.IdAtividadeRejeicao != 0)
-        {
-            chamadaFormatada.AtividadeRejeicao = new AtividadeRejeicaoModel
-            {
-                IdAtividadeRejeicao = chamadaEncontrada.IdAtividadeRejeicao
-            };
-        }
-        if (chamadaEncontrada.IdAtividade != 0)
-        {
-            chamadaFormatada.Atividade = new AtividadeModel
-            {
-                IdAtividade = chamadaEncontrada.IdAtividade
-            };
-        }
-
-        if (chamadaEncontrada.IdChamadaSuspensa != Guid.Empty)
-        {
-            chamadaFormatada.IdChamadaSuspensa = chamadaEncontrada.IdChamadaSuspensa;
-        }
+        var chamadaFormatada = FormatarOutputChamada(chamadaEncontrada);
 
         if (chamadaFormatada.PalletOrigem != null)
         {
@@ -237,6 +149,8 @@ public class ChamadaRepository : IChamadaRepository
 
     public async Task<ChamadaModel?> SelecionaChamadaEquipamento(ChamadaModel chamada)
     {
+        chamada = FormatarInputChamada(chamada);
+
         //var filtros = new Dictionary<string, object>
         //{
         //    { "@id_operador", chamada.Operador.IdOperador },
@@ -254,6 +168,7 @@ public class ChamadaRepository : IChamadaRepository
         //}
 
         //Guid? outputValido = parametros.Get<Guid?>("@id_chamada");
+
         Guid? outputValido = await SiagAPI.SelecionarChamadaAsync(chamada);
 
         if (Guid.Empty == outputValido || outputValido == null)
@@ -269,8 +184,7 @@ public class ChamadaRepository : IChamadaRepository
 
     public async void AtribuirChamada(ChamadaModel chamada)
     {
-        chamada.IdEquipamento = chamada.Equipamento?.IdEquipamento ?? 0;
-        chamada.IdOperador = chamada.Operador?.IdOperador ?? 0;
+        chamada = FormatarInputChamada(chamada);
 
         await SiagAPI.AtribuirChamadaAsync(chamada);
 
@@ -672,99 +586,153 @@ public class ChamadaRepository : IChamadaRepository
 
         foreach (var chamadaEncontrada in lista)
         {
-            var chamadaFormatada = new ChamadaModel
-            {
-                IdChamada = chamadaEncontrada.IdChamada,
-                FgStatus = chamadaEncontrada.FgStatus,
-                DtChamada = chamadaEncontrada.DtChamada,
-                DtRecebida = chamadaEncontrada.DtRecebida,
-                DtAtendida = chamadaEncontrada.DtAtendida,
-                DtFinalizada = chamadaEncontrada.DtFinalizada,
-                DtRejeitada = chamadaEncontrada.DtRejeitada,
-                DtSuspensa = null,
-            };
-
-            if (chamadaEncontrada.IdPalletOrigem != 0)
-            {
-                chamadaFormatada.PalletOrigem = new()
-                {
-                    IdPallet = chamadaEncontrada.IdPalletOrigem
-                };
-            }
-
-            if (chamadaEncontrada.IdPalletDestino != 0)
-            {
-                chamadaFormatada.PalletDestino = new()
-                {
-                    IdPallet = chamadaEncontrada.IdPalletDestino
-                };
-            }
-            if (chamadaEncontrada.IdPalletLeitura != 0)
-            {
-                chamadaFormatada.PalletLeitura = new()
-                {
-                    IdPallet = chamadaEncontrada.IdPalletLeitura
-                };
-            }
-
-            if (chamadaEncontrada.IdAreaArmazenagemOrigem != 0)
-            {
-                chamadaFormatada.AreaArmazenagemOrigem = new()
-                {
-                    IdAreaArmazenagem = chamadaEncontrada.IdAreaArmazenagemOrigem
-                };
-            }
-            if (chamadaEncontrada.IdAreaArmazenagemDestino != 0)
-            {
-                chamadaFormatada.AreaArmazenagemDestino = new()
-                {
-                    IdAreaArmazenagem = chamadaEncontrada.IdAreaArmazenagemDestino
-                };
-            }
-            if (chamadaEncontrada.IdAreaArmazenagemLeitura != 0)
-            {
-                chamadaFormatada.AreaArmazenagemLeitura = new()
-                {
-                    IdAreaArmazenagem = chamadaEncontrada.IdAreaArmazenagemLeitura
-                };
-            }
-            if (chamadaEncontrada.IdOperador != 0)
-            {
-                chamadaFormatada.Operador = new()
-                {
-                    IdOperador = chamadaEncontrada.IdOperador
-                };
-            }
-            if (chamadaEncontrada.IdEquipamento != 0)
-            {
-                chamadaFormatada.Equipamento = new()
-                {
-                    IdEquipamento = chamadaEncontrada.IdEquipamento
-                };
-            }
-            if (chamadaEncontrada.IdAtividadeRejeicao != 0)
-            {
-                chamadaFormatada.AtividadeRejeicao = new()
-                {
-                    IdAtividadeRejeicao = chamadaEncontrada.IdAtividadeRejeicao
-                };
-            }
-            if (chamadaEncontrada.IdAtividade != 0)
-            {
-                chamadaFormatada.Atividade = new()
-                {
-                    IdAtividade = chamadaEncontrada.IdAtividade
-                };
-            }
-
-            if (chamadaEncontrada.IdChamadaSuspensa != Guid.Empty)
-            {
-                chamadaFormatada.IdChamadaSuspensa = chamadaEncontrada.IdChamadaSuspensa;
-            }
+            var chamadaFormatada = FormatarOutputChamada(chamadaEncontrada);
 
             listaFormatada.Add(chamadaFormatada);
         }
 
         return listaFormatada;
+    }
+
+    public ChamadaModel FormatarInputChamada(ChamadaModel chamada)
+    {
+        if (chamada.PalletOrigem != null)
+        {
+            chamada.IdPalletOrigem = chamada.PalletOrigem.IdPallet;
+        }
+
+        if (chamada.PalletDestino != null)
+        {
+            chamada.IdPalletDestino = chamada.PalletDestino.IdPallet;
+        }
+
+        if (chamada.PalletLeitura != null)
+        {
+            chamada.IdPalletLeitura = chamada.PalletLeitura.IdPallet;
+        }
+
+        if (chamada.AreaArmazenagemOrigem != null)
+        {
+            chamada.IdAreaArmazenagemOrigem = chamada.AreaArmazenagemOrigem.IdAreaArmazenagem;
+        }
+
+        if (chamada.AreaArmazenagemDestino != null)
+        {
+            chamada.IdAreaArmazenagemDestino = chamada.AreaArmazenagemDestino.IdAreaArmazenagem;
+        }
+
+        if (chamada.AreaArmazenagemLeitura != null)
+        {
+            chamada.IdAreaArmazenagemLeitura = chamada.AreaArmazenagemLeitura.IdAreaArmazenagem;
+        }
+
+        if (chamada.Operador != null)
+        {
+            chamada.IdOperador = chamada.Operador.IdOperador;
+        }
+
+        if (chamada.Equipamento != null)
+        {
+            chamada.IdEquipamento = chamada.Equipamento.IdEquipamento;
+        }
+
+        if (chamada.AtividadeRejeicao != null)
+        {
+            chamada.IdAtividadeRejeicao = chamada.AtividadeRejeicao.IdAtividadeRejeicao;
+        }
+
+        if (chamada.Atividade != null)
+        {
+            chamada.IdAtividade = chamada.Atividade.IdAtividade;
+        }
+
+        return chamada;
+    }
+
+    public ChamadaModel FormatarOutputChamada(ChamadaModel chamada)
+    {
+        chamada.DtSuspensa = null;
+
+        if (chamada.IdPalletOrigem != 0)
+        {
+            chamada.PalletOrigem = new()
+            {
+                IdPallet = chamada.IdPalletOrigem
+            };
+        }
+
+        if (chamada.IdPalletDestino != 0)
+        {
+            chamada.PalletDestino = new()
+            {
+                IdPallet = chamada.IdPalletDestino
+            };
+        }
+
+        if (chamada.IdPalletLeitura != 0)
+        {
+            chamada.PalletLeitura = new()
+            {
+                IdPallet = chamada.IdPalletLeitura
+            };
+        }
+
+        if (chamada.IdAreaArmazenagemOrigem != 0)
+        {
+            chamada.AreaArmazenagemOrigem = new()
+            {
+                IdAreaArmazenagem = chamada.IdAreaArmazenagemOrigem
+            };
+        }
+
+        if (chamada.IdAreaArmazenagemDestino != 0)
+        {
+            chamada.AreaArmazenagemDestino = new()
+            {
+                IdAreaArmazenagem = chamada.IdAreaArmazenagemDestino
+            };
+        }
+
+        if (chamada.IdAreaArmazenagemLeitura != 0)
+        {
+            chamada.AreaArmazenagemLeitura = new()
+            {
+                IdAreaArmazenagem = chamada.IdAreaArmazenagemLeitura
+            };
+        }
+
+        if (chamada.IdOperador != 0)
+        {
+            chamada.Operador = new()
+            {
+                IdOperador = chamada.IdOperador
+            };
+        }
+
+        if (chamada.IdEquipamento != 0)
+        {
+            chamada.Equipamento = new()
+            {
+                IdEquipamento = chamada.IdEquipamento
+            };
+        }
+
+        if (chamada.IdAtividadeRejeicao != 0)
+        {
+            chamada.AtividadeRejeicao = new()
+            {
+                IdAtividadeRejeicao = chamada.IdAtividadeRejeicao
+            };
+        }
+
+        if (chamada.IdAtividade != 0)
+        {
+            chamada.Atividade = new()
+            {
+                IdAtividade = chamada.IdAtividade
+            };
+        }
+
+        return chamada;
     }
 }
