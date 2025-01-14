@@ -2,6 +2,6 @@
 
 public class ConsultarOperadorDTO
 {
-    public string Cracha { get; set; }
-    public string IdentificadorEquipamento { get; set; }
+    public string Cracha { get; set; } = string.Empty;
+    public string IdentificadorEquipamento { get; set; } = string.Empty;
 }

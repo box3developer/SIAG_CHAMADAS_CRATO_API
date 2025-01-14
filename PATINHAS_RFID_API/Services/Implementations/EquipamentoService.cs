@@ -49,7 +49,7 @@ namespace PATINHAS_RFID_API.Services.Implementations
             ChamadaModel chamada = new ChamadaModel();
             chamada.Operador = operador;
 
-            EquipamentoModel equipamento = await SiagAPI.GetEquipamentoByIdentificadorAsync(identificadorEquipamento);
+            var equipamento = await SiagAPI.GetEquipamentoByIdentificadorAsync(identificadorEquipamento);
 
             List<AtividadeRejeicaoModel> motivos = await SiagAPI.GetListaAtividadeRejeicaoAsync();
             ConfiguracaoModel config = new ConfiguracaoModel();
@@ -62,7 +62,7 @@ namespace PATINHAS_RFID_API.Services.Implementations
             config.TamanhoCodigoPallet = (int)Configuracoes.QtdeCaracteresCodBarraPallet;
             config.TempoAquisicaoTarefas = 5000;    //Fixo por enquanto
             config.TempoEstabilizacaoLeitura = 1000;//Fixo por enquanto
-            config.ModeloEquipamento = equipamento.EquipamentoModelo;
+            config.ModeloEquipamento = equipamento?.EquipamentoModelo;
 
             return config;
         }

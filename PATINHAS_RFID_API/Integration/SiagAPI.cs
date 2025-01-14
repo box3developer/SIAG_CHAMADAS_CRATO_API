@@ -287,7 +287,7 @@ public class SiagAPI
     {
         try
         {
-            string url = $"{siagURL}/Chamada";
+            string url = $"{siagURL}/Chamada/listar";
 
             var response = await client.PostAsJsonAsync(url, chamada);
             var chamadas = await response.Content.ReadFromJsonAsync<List<ChamadaModel>>();
@@ -485,18 +485,20 @@ public class SiagAPI
 
 
     /** Equipamento **/
-    public static async Task<EquipamentoModel> GetEquipamentoByIdentificadorAsync(string identificador)
+    public static async Task<EquipamentoModel?> GetEquipamentoByIdentificadorAsync(string identificador)
     {
         try
         {
             string url = $"{siagURL}/Equipamento/identificador/{identificador}";
 
-            var equipamento = await client.GetFromJsonAsync<EquipamentoModel>(url);
+            var result = await client.GetFromJsonAsync<APIResultDTO<EquipamentoModel>>(url);
 
-            if (equipamento == null)
+            if (result == null || result.Dados == null)
             {
-                return new();
+                return null;
             }
+
+            var equipamento = result.Dados;
 
             equipamento.EquipamentoModelo = new() { Codigo = equipamento.IdEquipamento };
             equipamento.SetorTrabalho = new() { IdSetorTrabalho = equipamento.IdSetorTrabalho ?? 0 };
@@ -551,24 +553,41 @@ public class SiagAPI
 
 
     /** Operador **/
-    public static async Task<OperadorModel?> GetOperadorAsync(long cracha, string nfc = "")
+    public static async Task<OperadorModel?> GetOperadorByCrachaAsync(long cracha)
     {
         try
         {
-            string url = $"{siagURL}/Operador";
+            string url = $"{siagURL}/Operador/{cracha}";
 
-            if (!string.IsNullOrEmpty(nfc))
+            var result = await client.GetFromJsonAsync<APIResultDTO<OperadorModel>>(url);
+
+            if (result == null || result.Dados == null)
             {
-                url = $"{url}/{cracha}";
-            }
-            else
-            {
-                url = $"{url}/nfc/{nfc}";
+                return null;
             }
 
-            var operador = await client.GetFromJsonAsync<OperadorModel>(url);
+            return result.Dados;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.Message);
+        }
+    }
 
-            return operador;
+    public static async Task<OperadorModel?> GetOperadorByNFCAsync(string nfc)
+    {
+        try
+        {
+            string url = $"{siagURL}/Operador/nfc/{nfc}";
+
+            var result = await client.GetFromJsonAsync<APIResultDTO<OperadorModel>>(url);
+
+            if (result == null || result.Dados == null)
+            {
+                return null;
+            }
+
+            return result.Dados;
         }
         catch (Exception ex)
         {

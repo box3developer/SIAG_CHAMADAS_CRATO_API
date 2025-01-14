@@ -1,7 +1,7 @@
 namespace PATINHAS_RFID_API;
 
-public static class Global
+public class Global
 {
-    public static string Conexao = "";
-    public static string SiagAPI = "";
+    public static string Conexao { get; set; } = string.Empty;
+    public static string SiagAPI { get; set; } = string.Empty;
 }
