@@ -1,8 +1,7 @@
-﻿namespace PATINHAS_RFID_API.DTOs
+﻿namespace PATINHAS_RFID_API.DTOs;
+
+public class ConsultarOperadorDTO
 {
-    public class ConsultarOperadorDTO
-    {
-        public string Cracha { get; set; }
-        public string IdentificadorEquipamento { get; set; }
-    }
+    public string Cracha { get; set; }
+    public string IdentificadorEquipamento { get; set; }
 }

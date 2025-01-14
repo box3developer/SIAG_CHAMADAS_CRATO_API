@@ -1,11 +1,8 @@
-﻿using PATINHAS_RFID_API.Models;
+﻿namespace PATINHAS_RFID_API.DTOs;
 
-namespace PATINHAS_RFID_API.DTOs
+public class SetCheckListDTO
 {
-    public class SetCheckListDTO
-    {
-        public string IdentificadorEquipamento { get; set; }
-        public long CodOperador { get; set; }
-        public string? ChecklistResponse { get; set; }
-    }
+    public string IdentificadorEquipamento { get; set; }
+    public long CodOperador { get; set; }
+    public string? ChecklistResponse { get; set; }
 }

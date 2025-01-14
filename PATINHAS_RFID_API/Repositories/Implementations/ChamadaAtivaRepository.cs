@@ -1,6 +1,5 @@
 ﻿using System.Data;
 using Dapper;
-using grendene_caracois_api_csharp;
 using Microsoft.Data.SqlClient;
 using PATINHAS_RFID_API.Data;
 using PATINHAS_RFID_API.Models.AreaArmazenagem;

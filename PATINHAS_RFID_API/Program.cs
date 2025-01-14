@@ -1,9 +1,12 @@
+using PATINHAS_RFID_API;
 using PATINHAS_RFID_API.Repositories.Implementations;
 using PATINHAS_RFID_API.Repositories.Interfaces;
 using PATINHAS_RFID_API.Services.Implementations;
 using PATINHAS_RFID_API.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
+
+Global.SiagAPI = builder.Configuration.GetConnectionString("siagAPI") ?? "";
 
 // Add services to the container.
 // REPOS

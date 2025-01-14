@@ -1,5 +1,4 @@
-﻿using grendene_caracois_api_csharp;
-using PATINHAS_RFID_API.Data;
+﻿using PATINHAS_RFID_API.Data;
 using PATINHAS_RFID_API.DTOs;
 using PATINHAS_RFID_API.DTOs.Chamada;
 using PATINHAS_RFID_API.DTOs.Equipamento;
