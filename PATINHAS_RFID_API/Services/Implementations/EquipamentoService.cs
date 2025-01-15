@@ -49,7 +49,7 @@ namespace PATINHAS_RFID_API.Services.Implementations
             ChamadaModel chamada = new ChamadaModel();
             chamada.Operador = operador;
 
-            var equipamento = await SiagAPI.GetEquipamentoByIdentificadorAsync(identificadorEquipamento);
+            var equipamento = await _equipamentoRepository.GetByIdentificador(identificadorEquipamento);
 
             List<AtividadeRejeicaoModel> motivos = await SiagAPI.GetListaAtividadeRejeicaoAsync();
             ConfiguracaoModel config = new ConfiguracaoModel();
@@ -101,7 +101,7 @@ namespace PATINHAS_RFID_API.Services.Implementations
 
         public async Task<bool> EnviaLocalizacaoEquipamento(string macEquipamento, string retornoEquipamento)
         {
-            var equipamento = await SiagAPI.GetEquipamentoByIdentificadorAsync(macEquipamento);
+            var equipamento = await _equipamentoRepository.GetByIdentificador(macEquipamento);
             equipamento.SetorTrabalho = await SiagAPI.GetSetorByIdAsync(equipamento.SetorTrabalho?.IdSetorTrabalho ?? 0);
 
             var mAreaArmazenagem = string.Concat(equipamento.SetorTrabalho.IdSetorTrabalho.ToString(), retornoEquipamento.AsSpan(0, 5), "01", retornoEquipamento.AsSpan(5, 1));
@@ -114,7 +114,7 @@ namespace PATINHAS_RFID_API.Services.Implementations
 
             if (areaArmazenagem != null)
             {
-                await SiagAPI.AtualizarEquipamentoAsync(equipamento.IdEquipamento, areaArmazenagem.Endereco?.IdEndereco);
+                await SiagAPI.AtualizarEnderecoEquipamentoAsync(equipamento.IdEquipamento, areaArmazenagem.Endereco?.IdEndereco);
             }
 
             return true;
@@ -140,7 +140,7 @@ namespace PATINHAS_RFID_API.Services.Implementations
             //Utiliza somente a primeira posição pois identificador é único na tabela Equipamento
             //equipamento = lstEquipamento[0];
 
-            equipamento = await SiagAPI.GetEquipamentoByIdentificadorAsync(equipamento.NmIdentificador);
+            equipamento = await _equipamentoRepository.GetByIdentificador(equipamento.NmIdentificador);
 
             OperadorModel operador = new OperadorModel();
             operador.IdOperador = setCheckListDTO.CodOperador;

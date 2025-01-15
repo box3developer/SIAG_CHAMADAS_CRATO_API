@@ -11,17 +11,19 @@ namespace PATINHAS_RFID_API.Services.Implementations;
 public class OperadorService : IOperadorService
 {
     private readonly IChamadaRepository _chamadaRepository;
+    private readonly IEquipamentoRepository _equipamentoRepository;
 
-    public OperadorService(IChamadaRepository chamadaRepository)
+    public OperadorService(IChamadaRepository chamadaRepository, IEquipamentoRepository equipamentoRepository)
     {
         _chamadaRepository = chamadaRepository;
+        _equipamentoRepository = equipamentoRepository;
     }
 
     public async Task<OperadorModel?> ConsultarOperador(ConsultarOperadorDTO consultarOperadorDTO)
     {
         OperadorModel? operador;
 
-        var _ = long.TryParse(consultarOperadorDTO.Cracha, out long codigo);
+        _ = long.TryParse(consultarOperadorDTO.Cracha, out long codigo);
 
         if (codigo == 0)
         {
@@ -63,7 +65,7 @@ public class OperadorService : IOperadorService
         // equipamentoBO.editar(identificadorEquipamento, operador);
 
         // método de login, já executa o logoff de outros operadores/equipamentos automaticamente
-        var equipamento = await SiagAPI.GetEquipamentoByIdentificadorAsync(consultarOperadorDTO.IdentificadorEquipamento);
+        var equipamento = await _equipamentoRepository.GetByIdentificador(consultarOperadorDTO.IdentificadorEquipamento);
 
         if (equipamento == null)
         {
@@ -79,14 +81,14 @@ public class OperadorService : IOperadorService
     {
         try
         {
-            var equipamento = await SiagAPI.GetEquipamentoByIdentificadorAsync(identificadorEquipamento);
+            var equipamento = await _equipamentoRepository.GetByIdentificador(identificadorEquipamento);
 
             if (equipamento == null)
             {
                 return false;
             }
 
-            var _ = long.TryParse(cracha, out long codigo);
+            _ = long.TryParse(cracha, out long codigo);
 
             await SiagAPI.LogoffOperadorAsync(codigo, equipamento.IdEquipamento);
 

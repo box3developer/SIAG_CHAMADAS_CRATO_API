@@ -7,7 +7,7 @@ namespace PATINHAS_RFID_API.Repositories.Interfaces;
 
 public interface IChamadaRepository
 {
-    public Task<ChamadaModel> Consultar(ChamadaModel chamada);
+    public Task<ChamadaModel?> Consultar(ChamadaModel chamada);
     public Task<ChamadaModel?> SelecionaChamadaEquipamento(ChamadaModel chamada);
     public void AtribuirChamada(ChamadaModel chamada);
     public Task EditarStatus(ChamadaModel chamada);

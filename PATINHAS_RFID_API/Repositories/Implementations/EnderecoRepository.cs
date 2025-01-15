@@ -1,49 +1,40 @@
-﻿using Dapper;
-using Microsoft.Data.SqlClient;
-using PATINHAS_RFID_API.Data;
+﻿using PATINHAS_RFID_API.Integration;
 using PATINHAS_RFID_API.Models.Endereco;
 using PATINHAS_RFID_API.Repositories.Interfaces;
 
-namespace PATINHAS_RFID_API.Repositories.Implementations
+namespace PATINHAS_RFID_API.Repositories.Implementations;
+
+public class EnderecoRepository : IEnderecoRepository
 {
-    public class EnderecoRepository : IEnderecoRepository
+    public async Task<EnderecoModel?> GetById(int idEndereco)
     {
-        const string sqlSelect = "SELECT id_endereco, id_regiaotrabalho, id_setortrabalho, id_tipoendereco, nm_endereco, qt_estoqueminimo, qt_estoquemaximo, fg_status, tp_preenchimento FROM endereco with(NOLOCK) WHERE 1 = 1 ";
+        var endereco = await SiagAPI.GetEnderecoByIdAsync(idEndereco);
 
-        public async Task<EnderecoModel> Consultar(EnderecoModel endereco)
+        if (endereco == null)
         {
-            string sql = sqlSelect;
-            sql += "AND id_endereco = @Codigo ";
-
-            using (var conexao = new SqlConnection(Global.Conexao))
-            {
-                var enderecoEncontrado = await conexao.QueryFirstOrDefaultAsync<EnderecoQuery>(sql, new
-                {
-                    Codigo = endereco.IdEndereco,
-                });
-
-                return new EnderecoModel
-                {
-                    IdEndereco = enderecoEncontrado.id_endereco,
-                    RegiaoTrabalho = new RegiaoModel
-                    {
-                        Codigo = enderecoEncontrado.id_regiaotrabalho,
-                    },
-                    SetorTrabalho = new SetorModel
-                    {
-                        IdSetorTrabalho = enderecoEncontrado.id_setortrabalho
-                    },
-                    TipoEndereco = new TipoEndereco
-                    {
-                        Codigo = enderecoEncontrado.id_tipoendereco,
-                    },
-                    NmEndereco = enderecoEncontrado.nm_endereco,
-                    QtEstoqueMinimo = enderecoEncontrado.qt_estoqueminimo,
-                    QtEstoqueMaximo = enderecoEncontrado.qt_estoquemaximo,
-                    FgStatus = (StatusEndereco)enderecoEncontrado.fg_status,
-                    TpPreenchimento = (TipoPreenchimento)enderecoEncontrado.tp_preenchimento,
-                };
-            }
+            return null;
         }
+
+        return FormatarEnderecoOutput(endereco);
+    }
+
+    private static EnderecoModel FormatarEnderecoOutput(EnderecoModel endereco)
+    {
+        endereco.TipoEndereco = new()
+        {
+            Codigo = endereco.IdTipoEndereco
+        };
+
+        endereco.SetorTrabalho = new()
+        {
+            IdSetorTrabalho = endereco.IdSetorTrabalho
+        };
+
+        endereco.RegiaoTrabalho = new()
+        {
+            Codigo = endereco.IdRegiaoTrabalho
+        };
+
+        return endereco;
     }
 }

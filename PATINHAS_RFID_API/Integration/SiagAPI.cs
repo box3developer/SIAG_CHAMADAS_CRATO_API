@@ -30,11 +30,16 @@ public class SiagAPI
     {
         try
         {
-            string url = $"{siagURL}/AreaArmazenagem/{id}";
+            string url = $"{siagURL}/AreaArmazenagem/{id}/chamada";
 
-            var areaArmazenagem = await client.GetFromJsonAsync<AreaArmazenagemModel>(url);
+            var response = await client.GetFromJsonAsync<APIResultDTO<AreaArmazenagemModel>>(url);
 
-            return areaArmazenagem;
+            if (response == null || response.Dados == null)
+            {
+                return null;
+            }
+
+            return response.Dados;
         }
         catch (Exception ex)
         {
@@ -42,15 +47,20 @@ public class SiagAPI
         }
     }
 
-    public static async Task<AreaArmazenagemModel> GetAreaArmazenagemByIdentificadorAsync(string identificador)
+    public static async Task<AreaArmazenagemModel?> GetAreaArmazenagemByIdentificadorAsync(string identificador)
     {
         try
         {
-            string url = $"{siagURL}/AreaArmazenagem/Identificador/{identificador}";
+            string url = $"{siagURL}/AreaArmazenagem/Identificador/{identificador}/chamada";
 
-            var areaArmazenagem = await client.GetFromJsonAsync<AreaArmazenagemModel>(url);
+            var response = await client.GetFromJsonAsync<APIResultDTO<AreaArmazenagemModel>>(url);
 
-            return areaArmazenagem ?? new();
+            if (response == null || response.Dados == null)
+            {
+                return null;
+            }
+
+            return response.Dados;
         }
         catch (Exception ex)
         {
@@ -78,15 +88,20 @@ public class SiagAPI
 
 
     /** Atividade **/
-    public static async Task<AtividadeModel> GetAtividadeByIdAsync(int id)
+    public static async Task<AtividadeModel?> GetAtividadeByIdAsync(int id)
     {
         try
         {
             string url = $"{siagURL}/Atividade/{id}";
 
-            var atividade = await client.GetFromJsonAsync<AtividadeModel>(url);
+            var response = await client.GetFromJsonAsync<APIResultDTO<AtividadeModel>>(url);
 
-            return atividade ?? new();
+            if (response == null || response.Dados == null)
+            {
+                return null;
+            }
+
+            return response.Dados;
         }
         catch (Exception ex)
         {
@@ -176,9 +191,14 @@ public class SiagAPI
         {
             string url = $"{siagURL}/Chamada/{id}";
 
-            var chamada = await client.GetFromJsonAsync<ChamadaModel>(url);
+            var response = await client.GetFromJsonAsync<APIResultDTO<ChamadaModel>>(url);
 
-            return chamada;
+            if (response == null || response.Dados == null)
+            {
+                return null;
+            }
+
+            return response.Dados;
         }
         catch (Exception ex)
         {
@@ -273,9 +293,14 @@ public class SiagAPI
             string url = $"{siagURL}/Chamada/selecionar";
 
             var response = await client.PostAsJsonAsync(url, chamada);
-            var id = await response.Content.ReadFromJsonAsync<Guid>();
+            var responseJson = await response.Content.ReadFromJsonAsync<APIResultDTO<Guid>>();
 
-            return id;
+            if (responseJson == null)
+            {
+                return Guid.Empty;
+            }
+
+            return responseJson.Dados;
         }
         catch
         {
@@ -406,13 +431,13 @@ public class SiagAPI
         }
     }
 
-    public static async Task<bool> UpdateChamadaTarefaAsync(ChamadaTarefaModel chamadaTareda)
+    public static async Task<bool> UpdateChamadaTarefaAsync(ChamadaTarefaModel chamadaTarefa)
     {
         try
         {
             string url = $"{siagURL}/ChamadaTarefa";
 
-            var response = await client.PutAsJsonAsync(url, chamadaTareda);
+            var response = await client.PutAsJsonAsync(url, chamadaTarefa);
 
             return true;
         }
@@ -458,24 +483,20 @@ public class SiagAPI
 
 
     /** Endereco **/
-    public static async Task<EnderecoModel> GetEnderecoByIdAsync(int idEndereco)
+    public static async Task<EnderecoModel?> GetEnderecoByIdAsync(int idEndereco)
     {
         try
         {
             string url = $"{siagURL}/Endereco/{idEndereco}";
 
-            var endereco = await client.GetFromJsonAsync<EnderecoModel>(url);
+            var response = await client.GetFromJsonAsync<APIResultDTO<EnderecoModel>>(url);
 
-            if (endereco == null)
+            if (response == null || response.Dados == null)
             {
-                return new();
+                return null;
             }
 
-            endereco.RegiaoTrabalho = new() { Codigo = endereco.IdRegiaoTrabalho };
-            endereco.SetorTrabalho = new() { IdSetorTrabalho = endereco.IdSetorTrabalho };
-            endereco.TipoEndereco = new() { Codigo = endereco.IdTipoEndereco };
-
-            return endereco;
+            return response.Dados;
         }
         catch (Exception ex)
         {
@@ -513,11 +534,11 @@ public class SiagAPI
         }
     }
 
-    public static async Task<bool> AtualizarEquipamentoAsync(int idEquipamento, int? idEndereco = null)
+    public static async Task<bool> AtualizarEnderecoEquipamentoAsync(int idEquipamento, int? idEndereco = null)
     {
         try
         {
-            string url = $"{siagURL}/Equipamento";
+            string url = $"{siagURL}/Equipamento/endereco";
 
             await client.PutAsJsonAsync<EquipamentoUpdateDTO>(url, new()
             {
@@ -533,6 +554,21 @@ public class SiagAPI
         }
     }
 
+    public static async Task<bool> AtualizarEquipamentoAsync(EquipamentoModel equipamento)
+    {
+        try
+        {
+            string url = $"{siagURL}/Equipamento";
+
+            await client.PutAsJsonAsync(url, equipamento);
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.Message);
+        }
+    }
 
     /** Log **/
     public static async Task<bool> InsertLogAsync(string mensagem)

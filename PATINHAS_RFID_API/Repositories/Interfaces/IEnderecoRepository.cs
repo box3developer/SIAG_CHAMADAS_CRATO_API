@@ -1,9 +1,8 @@
 ﻿using PATINHAS_RFID_API.Models.Endereco;
 
-namespace PATINHAS_RFID_API.Repositories.Interfaces
+namespace PATINHAS_RFID_API.Repositories.Interfaces;
+
+public interface IEnderecoRepository
 {
-    public interface IEnderecoRepository
-    {
-        public Task<EnderecoModel> Consultar(EnderecoModel endereco);
-    }
+    public Task<EnderecoModel?> GetById(int idEndereco);
 }
