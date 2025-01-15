@@ -32,21 +32,6 @@ public class AtividadeController : ControllerBase
         }
     }
 
-    [HttpGet("IniciarTarefa/{idChamada}/{idTarefa}")]
-    public async Task<ActionResult> IniciarTarefa(string idChamada, int idTarefa)
-    {
-        try
-        {
-            //return Ok(true);
-            var response = await _atividadeService.IniciarTarefa(idChamada, idTarefa);
-            return Ok(response);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
-    }
-
     [HttpPost("SelecionaTarefa")]
     public async Task<ActionResult> SelecionaTarefa([FromBody] SelecionarTarefaDTO selecionaTarefaDTO)
     {
@@ -62,13 +47,28 @@ public class AtividadeController : ControllerBase
         }
     }
 
+    [HttpGet("IniciarTarefa/{idChamada}/{idTarefa}")]
+    public async Task<ActionResult> IniciarTarefa(string idChamada, int idTarefa)
+    {
+        try
+        {
+            var response = await _atividadeService.IniciarTarefa(idChamada, idTarefa);
+
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
     [HttpGet("RejeitarTarefa/{Cracha}/{idMotivo}/{idChamada}")]
     public async Task<ActionResult> RejeitarTarefa(long Cracha, int idMotivo, string? idChamada)
     {
         try
         {
-            //return Ok(true);
             var response = await _atividadeService.RejeitarTarefa(Cracha, idMotivo, idChamada);
+
             return Ok(response);
         }
         catch (Exception ex)

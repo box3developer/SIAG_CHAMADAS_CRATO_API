@@ -5,7 +5,6 @@ using PATINHAS_RFID_API.DTOs;
 using PATINHAS_RFID_API.Integration;
 using PATINHAS_RFID_API.Models;
 using PATINHAS_RFID_API.Models.AreaArmazenagem;
-using PATINHAS_RFID_API.Models.AtividadeRejeicao;
 using PATINHAS_RFID_API.Models.AtividadeTarefa;
 using PATINHAS_RFID_API.Models.Chamada;
 using PATINHAS_RFID_API.Models.ChamadaTarefa;
@@ -55,6 +54,207 @@ public class AtividadeService : IAtividadeService
         _chamadaTarefaRepository = chamadaTarefaRepository;
     }
 
+    public async Task<List<ChamadaCompletaModel>?> SelecionaTarefa(SelecionarTarefaDTO selecionarTarefaDTO)
+    {
+        OperadorModel operador = new()
+        {
+            IdOperador = selecionarTarefaDTO.Cracha
+        };
+
+        ChamadaModel chamada = new()
+        {
+            Operador = operador
+        };
+
+        var equipamento = await _equipamentoRepository.GetByIdentificador(selecionarTarefaDTO.IdentificadorEquipamento);
+
+        if (equipamento == null)
+        {
+            throw new Exception("Equipamento não encontrado!");
+        }
+
+        if (string.IsNullOrEmpty(equipamento.NmIP) || (!selecionarTarefaDTO.IpEquipamento.Equals(equipamento.NmIP)))
+        {
+            equipamento.NmIP = selecionarTarefaDTO.IpEquipamento;
+            _equipamentoRepository.Editar(equipamento);
+        }
+
+        chamada.Equipamento = equipamento;
+
+        // Código responsável por bloquear chamadas concorrentes/simultaneas para um mesmo modelo e setor.
+        string codigoBloqueio = equipamento.IdEquipamentoModelo.ToString() + "_" + equipamento.IdEquipamentoModelo.ToString();
+
+        lock (chamadaFIFO)
+        {
+            if (!chamadaFIFO.ContainsKey(codigoBloqueio))
+            {
+                chamadaFIFO.Add(codigoBloqueio, new Queue<int>());
+            }
+        }
+
+        List<ChamadaCompletaModel> listaChamadaCompleta = new();
+
+        lock (chamadaFIFO[codigoBloqueio])
+        {
+            var chamadaAtual = _chamadaRepository.SelecionaChamadaEquipamento(chamada).Result;
+
+            if (chamadaAtual == null)
+            {
+                return listaChamadaCompleta;
+            }
+
+            //Cria objeto para envio das tarefas ao tablet por JSON
+            List<AtividadeTarefaModel> atividades;
+            ChamadaCompletaModel completa = new()
+            {
+                Tarefas = new List<AtividadeTarefaModel>()
+            };
+
+            //Consulta detalhes da atividade relacionada com o Chamado
+            if (chamadaAtual.Atividade != null && chamadaAtual.Atividade.IdAtividade != 0)
+            {
+                chamadaAtual.Atividade = SiagAPI.GetAtividadeByIdAsync(chamadaAtual.Atividade.IdAtividade).Result;
+
+                AtividadeTarefaModel atividadeTarefa = new()
+                {
+                    Atividade = chamadaAtual.Atividade
+                };
+
+                //Consulta lista de atividadades da tarefa relacionada com o Chamado
+                atividades = _atividadeTarefaRepository.ConsultarLista(atividadeTarefa, chamadaAtual).Result;
+            }
+            else
+            {
+                atividades = new List<AtividadeTarefaModel>();
+            }
+
+            listaChamadaCompleta.Add(completa);
+
+            //Altera a data de recebimento e o status da Chamada para Recebida
+            chamadaAtual.Equipamento = equipamento;
+            chamadaAtual.Operador = operador;
+
+            if (chamadaAtual.FgStatus == StatusChamada.Aguardando)
+            {
+                ChamadaModel? chamadaConf = new();
+
+                try
+                {
+                    chamadaConf = _chamadaRepository.Consultar(chamadaAtual).Result;
+
+                    if (chamadaConf != null && chamadaConf.FgStatus == StatusChamada.Aguardando)
+                    {
+                        chamadaAtual.FgStatus = StatusChamada.Recebido;
+                        _chamadaRepository.AtribuirChamada(chamadaAtual);
+
+                        // Altera a localização atual do equipamento que recebeu a chamada
+                        if ((chamadaAtual.AreaArmazenagemOrigem != null) && (chamadaAtual.AreaArmazenagemOrigem.IdAreaArmazenagem > 0))
+                        {
+                            var areaArmazenagemAux = SiagAPI.GetAreaArmazenagemByIdAsync(chamadaAtual.AreaArmazenagemOrigem.IdAreaArmazenagem).Result;
+
+                            if (areaArmazenagemAux != null)
+                            {
+                                EnderecoModel endereco = new()
+                                {
+                                    IdEndereco = areaArmazenagemAux.IdEndereco
+                                };
+
+                                _ = SiagAPI.AtualizarEnderecoEquipamentoAsync(equipamento.IdEquipamento, endereco.IdEndereco).Result;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+                finally
+                {
+                    chamadaConf = null;
+                }
+            }
+
+            // Remove da lista todas as tarefas automáticas (que não dependem de interação do equipamento)
+            // Obs: executa as tarefas automáticas antes da primeira interação
+            bool executar = true;
+            bool refazerConsulta = false;
+
+            foreach (AtividadeTarefaModel tarefa in atividades)
+            {
+                if (tarefa.FgRecurso == Recursos.Automatico)
+                {
+                    if (executar)
+                    {
+                        executar = false; // a efetivaLeitura() executa recursivamente as tarefas automáticas seguintes
+                        _ = IniciarTarefa(chamadaAtual.IdChamada.ToString(), tarefa.IdTarefa);
+                        _ = EfetivaLeitura("", "", chamadaAtual.IdChamada.ToString(), tarefa.IdTarefa);
+                        refazerConsulta = true;
+                    }
+                }
+                else
+                {
+                    executar = false;
+                    completa.Tarefas.Add(tarefa);
+                }
+            }
+
+            // refaz a consulta, para o caso de ter modificado algum parametro durante a execução automatica das tarefas
+            if (refazerConsulta)
+            {
+                chamadaAtual = _chamadaRepository.Consultar(chamadaAtual).Result;
+                _atividadeTarefaRepository.AjustaMensagens(chamadaAtual ?? new(), completa.Tarefas);
+            }
+
+            if (chamadaAtual == null)
+            {
+                return null;
+            }
+
+            completa.IdChamada = chamadaAtual.IdChamada;
+            completa.PalletOrigem = chamadaAtual.PalletOrigem;
+            completa.PalletDestino = chamadaAtual.PalletDestino;
+            completa.PalletLeitura = chamadaAtual.PalletLeitura;
+            completa.AreaArmazenagemOrigem = chamadaAtual.AreaArmazenagemOrigem;
+            completa.AreaArmazenagemDestino = chamadaAtual.AreaArmazenagemDestino;
+            completa.AreaArmazenagemLeitura = chamadaAtual.AreaArmazenagemLeitura;
+            completa.Operador = chamadaAtual.Operador;
+            completa.Equipamento = chamadaAtual.Equipamento;
+            completa.AtividadeRejeicao = chamadaAtual.AtividadeRejeicao;
+            completa.Atividade = chamadaAtual.Atividade;
+            completa.FgStatus = chamadaAtual.FgStatus;
+            completa.DtChamada = chamadaAtual.DtChamada;
+            completa.DtRecebida = chamadaAtual.DtRecebida;
+            completa.DtAtendida = chamadaAtual.DtAtendida;
+            completa.DtFinalizada = chamadaAtual.DtFinalizada;
+            completa.DtRejeitada = chamadaAtual.DtRejeitada;
+
+            // testa se existe alguma tarefa pendente na chamada
+            if (completa.Tarefas.Count == 0)
+            {
+                // executou tarefas automaticas e não sobrou nenhuma tarefa, refaz a consulta
+                // faz isso apenas na primeira vez, para não travar o WS se houver sequencia de chamadas nessa situação
+                if (refazerConsulta && selecionarTarefaDTO.Reconsultar)
+                {
+                    var selecionarTarefa = new SelecionarTarefaDTO
+                    {
+                        Cracha = selecionarTarefaDTO.Cracha,
+                        IdentificadorEquipamento = selecionarTarefaDTO.IdentificadorEquipamento,
+                        Reconsultar = false,
+                        IpEquipamento = selecionarTarefaDTO.IpEquipamento,
+                    };
+
+                    return SelecionaTarefa(selecionarTarefa).Result;
+                }
+                else
+                {
+                    listaChamadaCompleta.Clear();
+                }
+            }
+        }
+
+        return listaChamadaCompleta;
+    }
+
     public async Task<bool> IniciarTarefa(string idChamada, int idTarefa)
     {
         ChamadaModel? chamada = new()
@@ -97,6 +297,57 @@ public class AtividadeService : IAtividadeService
         await SiagAPI.UpdateChamadaTarefaAsync(chamadaTarefa);
 
         return true;
+    }
+
+    public async Task<bool> RejeitarTarefa(long cracha, int idMotivo, string? idChamada = null)
+    {
+
+        if (idChamada != null && idMotivo > 0)
+        {
+            //Se código da chamada for nulo rejeita todas chamdas do operador
+            OperadorModel operador = new()
+            {
+                IdOperador = cracha
+            };
+
+            ChamadaModel? chamada = new()
+            {
+                IdChamada = new Guid(idChamada),
+                Operador = operador,
+            };
+
+            chamada = await _chamadaRepository.Consultar(chamada);
+
+            if (chamada == null)
+            {
+                return false;
+            }
+
+            chamada.Atividade = await SiagAPI.GetAtividadeByIdAsync(chamada.IdAtividade);
+
+            if (chamada.Atividade == null)
+            {
+                return false;
+            }
+
+            if (chamada.Atividade.FgPermiteRejeitar == RejeicaoTarefa.Permite)
+            {
+                chamada.AtividadeRejeicao = new()
+                {
+                    IdAtividadeRejeicao = idMotivo
+                };
+
+                return await SiagAPI.RejeitarChamadaAsync(chamada.IdChamada);
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else
+        {
+            return false;
+        }
     }
 
     public async Task<MensagemWebservice> EfetivaLeitura(string? identificadorPallet, string? identificadorAreaArmazenagem, string idChamada, int idTarefa)
@@ -348,240 +599,6 @@ public class AtividadeService : IAtividadeService
                 Retorno = false,
                 Mensagem = ex.Message
             };
-        }
-    }
-
-    public async Task<List<ChamadaCompletaModel>?> SelecionaTarefa(SelecionarTarefaDTO selecionarTarefaDTO)
-    {
-        OperadorModel operador = new()
-        {
-            IdOperador = selecionarTarefaDTO.Cracha
-        };
-
-        ChamadaModel chamada = new()
-        {
-            Operador = operador
-        };
-
-        var equipamento = await _equipamentoRepository.GetByIdentificador(selecionarTarefaDTO.IdentificadorEquipamento);
-
-        if (equipamento == null)
-        {
-            throw new Exception("Equipamento não encontrado!");
-        }
-
-        if (string.IsNullOrEmpty(equipamento.NmIP) || (!selecionarTarefaDTO.IpEquipamento.Equals(equipamento.NmIP)))
-        {
-            equipamento.NmIP = selecionarTarefaDTO.IpEquipamento;
-            _equipamentoRepository.Editar(equipamento);
-        }
-
-        chamada.Equipamento = equipamento;
-
-        // Código responsável por bloquear chamadas concorrentes/simultaneas para um mesmo modelo e setor.
-        string codigoBloqueio = equipamento.IdEquipamentoModelo.ToString() + "_" + equipamento.IdEquipamentoModelo.ToString();
-
-        lock (chamadaFIFO)
-        {
-            if (!chamadaFIFO.ContainsKey(codigoBloqueio))
-            {
-                chamadaFIFO.Add(codigoBloqueio, new Queue<int>());
-            }
-        }
-
-        List<ChamadaCompletaModel> listaChamadaCompleta = new();
-
-        lock (chamadaFIFO[codigoBloqueio])
-        {
-            var chamadaAtual = _chamadaRepository.SelecionaChamadaEquipamento(chamada).Result;
-
-            if (chamadaAtual == null)
-            {
-                return listaChamadaCompleta;
-            }
-
-            //Cria objeto para envio das tarefas ao tablet por JSON
-            List<AtividadeTarefaModel> atividades;
-            ChamadaCompletaModel completa = new()
-            {
-                Tarefas = new List<AtividadeTarefaModel>()
-            };
-
-            //Consulta detalhes da atividade relacionada com o Chamado
-            if (chamadaAtual.Atividade != null && chamadaAtual.Atividade.IdAtividade != 0)
-            {
-                chamadaAtual.Atividade = SiagAPI.GetAtividadeByIdAsync(chamadaAtual.Atividade.IdAtividade).Result;
-
-                AtividadeTarefaModel atividadeTarefa = new()
-                {
-                    Atividade = chamadaAtual.Atividade
-                };
-
-                //Consulta lista de atividadades da tarefa relacionada com o Chamado
-                atividades = _atividadeTarefaRepository.ConsultarLista(atividadeTarefa, chamadaAtual).Result;
-            }
-            else
-            {
-                atividades = new List<AtividadeTarefaModel>();
-            }
-
-            listaChamadaCompleta.Add(completa);
-
-            //Altera a data de recebimento e o status da Chamada para Recebida
-            chamadaAtual.Equipamento = equipamento;
-            chamadaAtual.Operador = operador;
-
-            if (chamadaAtual.FgStatus == StatusChamada.Aguardando)
-            {
-                ChamadaModel? chamadaConf = new();
-
-                try
-                {
-                    chamadaConf = _chamadaRepository.Consultar(chamadaAtual).Result;
-
-                    if (chamadaConf != null && chamadaConf.FgStatus == StatusChamada.Aguardando)
-                    {
-                        chamadaAtual.FgStatus = StatusChamada.Recebido;
-                        _chamadaRepository.AtribuirChamada(chamadaAtual);
-
-                        // Altera a localização atual do equipamento que recebeu a chamada
-                        if ((chamadaAtual.AreaArmazenagemOrigem != null) && (chamadaAtual.AreaArmazenagemOrigem.IdAreaArmazenagem > 0))
-                        {
-                            var areaArmazenagemAux = SiagAPI.GetAreaArmazenagemByIdAsync(chamadaAtual.AreaArmazenagemOrigem.IdAreaArmazenagem).Result;
-
-                            if (areaArmazenagemAux != null)
-                            {
-                                EnderecoModel endereco = new()
-                                {
-                                    IdEndereco = areaArmazenagemAux.IdEndereco
-                                };
-
-                                _ = SiagAPI.AtualizarEnderecoEquipamentoAsync(equipamento.IdEquipamento, endereco.IdEndereco).Result;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        return null;
-                    }
-                }
-                finally
-                {
-                    chamadaConf = null;
-                }
-            }
-
-            // Remove da lista todas as tarefas automáticas (que não dependem de interação do equipamento)
-            // Obs: executa as tarefas automáticas antes da primeira interação
-            bool executar = true;
-            bool refazerConsulta = false;
-
-            foreach (AtividadeTarefaModel tarefa in atividades)
-            {
-                if (tarefa.FgRecurso == Recursos.Automatico)
-                {
-                    if (executar)
-                    {
-                        executar = false; // a efetivaLeitura() executa recursivamente as tarefas automáticas seguintes
-                        _ = IniciarTarefa(chamadaAtual.IdChamada.ToString(), tarefa.IdTarefa);
-                        _ = EfetivaLeitura("", "", chamadaAtual.IdChamada.ToString(), tarefa.IdTarefa);
-                        refazerConsulta = true;
-                    }
-                }
-                else
-                {
-                    executar = false;
-                    completa.Tarefas.Add(tarefa);
-                }
-            }
-
-            // refaz a consulta, para o caso de ter modificado algum parametro durante a execução automatica das tarefas
-            if (refazerConsulta)
-            {
-                chamadaAtual = _chamadaRepository.Consultar(chamadaAtual).Result;
-                _atividadeTarefaRepository.AjustaMensagens(chamadaAtual ?? new(), completa.Tarefas);
-            }
-
-            if (chamadaAtual == null)
-            {
-                return null;
-            }
-
-            completa.IdChamada = chamadaAtual.IdChamada;
-            completa.PalletOrigem = chamadaAtual.PalletOrigem;
-            completa.PalletDestino = chamadaAtual.PalletDestino;
-            completa.PalletLeitura = chamadaAtual.PalletLeitura;
-            completa.AreaArmazenagemOrigem = chamadaAtual.AreaArmazenagemOrigem;
-            completa.AreaArmazenagemDestino = chamadaAtual.AreaArmazenagemDestino;
-            completa.AreaArmazenagemLeitura = chamadaAtual.AreaArmazenagemLeitura;
-            completa.Operador = chamadaAtual.Operador;
-            completa.Equipamento = chamadaAtual.Equipamento;
-            completa.AtividadeRejeicao = chamadaAtual.AtividadeRejeicao;
-            completa.Atividade = chamadaAtual.Atividade;
-            completa.FgStatus = chamadaAtual.FgStatus;
-            completa.DtChamada = chamadaAtual.DtChamada;
-            completa.DtRecebida = chamadaAtual.DtRecebida;
-            completa.DtAtendida = chamadaAtual.DtAtendida;
-            completa.DtFinalizada = chamadaAtual.DtFinalizada;
-            completa.DtRejeitada = chamadaAtual.DtRejeitada;
-
-            // testa se existe alguma tarefa pendente na chamada
-            if (completa.Tarefas.Count == 0)
-            {
-                // executou tarefas automaticas e não sobrou nenhuma tarefa, refaz a consulta
-                // faz isso apenas na primeira vez, para não travar o WS se houver sequencia de chamadas nessa situação
-                if (refazerConsulta && selecionarTarefaDTO.Reconsultar)
-                {
-                    var selecionarTarefa = new SelecionarTarefaDTO
-                    {
-                        Cracha = selecionarTarefaDTO.Cracha,
-                        IdentificadorEquipamento = selecionarTarefaDTO.IdentificadorEquipamento,
-                        Reconsultar = false,
-                        IpEquipamento = selecionarTarefaDTO.IpEquipamento,
-                    };
-
-                    return SelecionaTarefa(selecionarTarefa).Result;
-                }
-                else
-                {
-                    listaChamadaCompleta.Clear();
-                }
-            }
-        }
-
-        return listaChamadaCompleta;
-    }
-
-    public async Task<bool> RejeitarTarefa(long cracha, int idMotivo, string? idChamada = null)
-    {
-        ChamadaModel chamada = new ChamadaModel();
-
-        if (idChamada != null && idMotivo > 0)
-        {
-            //Se código da chamada for nulo rejeita todas chamdas do operador
-            OperadorModel operador = new OperadorModel();
-            operador.IdOperador = cracha;
-            chamada.Operador = operador;
-
-            chamada.IdChamada = new Guid(idChamada);
-            chamada = await _chamadaRepository.Consultar(chamada);
-
-            chamada.Atividade = await SiagAPI.GetAtividadeByIdAsync(chamada.Atividade?.IdAtividade ?? 0);
-            if (chamada.Atividade.FgPermiteRejeitar == RejeicaoTarefa.Permite)
-            {
-                chamada.AtividadeRejeicao = new AtividadeRejeicaoModel();
-                chamada.AtividadeRejeicao.IdAtividadeRejeicao = idMotivo;
-
-                return await SiagAPI.RejeitarChamadaAsync(chamada.IdChamada);
-            }
-            else
-            {
-                return false;
-            }
-        }
-        else
-        {
-            return false;
         }
     }
 }
