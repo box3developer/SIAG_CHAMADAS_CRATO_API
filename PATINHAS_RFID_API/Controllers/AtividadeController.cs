@@ -83,6 +83,7 @@ public class AtividadeController : ControllerBase
         try
         {
             var response = await _atividadeService.EfetivaLeitura(identificadorPallet, identificadorAreaArmazenagem, idChamada, idTarefa);
+
             return Ok(response);
         }
         catch (Exception ex)

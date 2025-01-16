@@ -30,7 +30,7 @@ public class AtividadeService : IAtividadeService
     private readonly IChamadaTarefaRepository _chamadaTarefaRepository;
 
     private static readonly Dictionary<string, Queue<int>> chamadaFIFO = new();
-
+    private static readonly string nodeRedURL = "";
     public AtividadeService(
         IEquipamentoRepository equipamentoRepository,
         IAtividadeRepository atividadeRepository,
@@ -363,15 +363,60 @@ public class AtividadeService : IAtividadeService
 
             bool leituraAlterada = false;
 
-            if (chamada != null && chamada.FgStatus != StatusChamada.Rejeitado && chamada.FgStatus != StatusChamada.Finalizado)
+            if (chamada == null)
+            {
+                return new MensagemWebservice()
+                {
+                    Retorno = true,
+                    Mensagem = ""
+                };
+            }
+
+            if (chamada.FgStatus != StatusChamada.Rejeitado && chamada.FgStatus != StatusChamada.Finalizado)
             {
                 AreaArmazenagemModel? areaArmazenagemLeitura = chamada.AreaArmazenagemLeitura;
                 PalletModel? palletLeitura = chamada.PalletLeitura;
 
+                if (!identificadorPallet.IsNullOrEmpty() && identificadorPallet != "0")
+                {
+                    chamada.PalletLeitura = await SiagAPI.GetPalletByIdenfificadorAsync(identificadorPallet ?? "");
+
+                    if (chamada.PalletLeitura == null)
+                    {
+                        try
+                        {
+
+                            PalletModel pallet = new()
+                            {
+                                IdPallet = Convert.ToInt32(identificadorPallet?[3..]),
+                                FgStatus = StatusPallet.Livre,
+                                CdIdentificacao = identificadorPallet ?? "",
+                                QtUtilizacao = 0
+                            };
+
+                            await _palletRepository.Inserir(pallet);
+
+                            chamada.PalletLeitura = pallet;
+                        }
+                        catch (Exception)
+                        {
+                            return FormatarMensagem(false, "Erro ao cadastrar o pallet " + identificadorPallet);
+                        }
+
+                    }
+
+                    // verifica se houve mudança na leitura da area
+                    if (((palletLeitura == null) && (chamada.PalletLeitura != null)) ||
+                        ((palletLeitura != null) && (chamada.PalletLeitura == null)) ||
+                        ((palletLeitura != null) && (!palletLeitura.IdPallet.Equals(chamada?.PalletLeitura?.IdPallet))))
+                    {
+                        leituraAlterada = true;
+                    }
+                }
+
                 //Armazena codigos lidos no objeto da chamada
                 if (!identificadorAreaArmazenagem.IsNullOrEmpty() && identificadorAreaArmazenagem != "0")
                 {
-                    //AreaArmazenagemBO areaBO = new AreaArmazenagemBO(paramWeb, chamadaBO); //transacao
                     chamada.AreaArmazenagemLeitura = await SiagAPI.GetAreaArmazenagemByIdentificadorAsync(identificadorAreaArmazenagem ?? "");
 
                     if (chamada.AreaArmazenagemLeitura == null)
@@ -385,6 +430,7 @@ public class AtividadeService : IAtividadeService
                             chamada.AreaArmazenagemLeitura = await SiagAPI.GetAreaArmazenagemByIdAsync(areaArmazenagem.IdAreaArmazenagem);
                         }
                     }
+
                     // verifica se houve mudança na leitura da area
                     if (((areaArmazenagemLeitura == null) && (chamada.AreaArmazenagemLeitura != null)) ||
                         ((areaArmazenagemLeitura != null) && (chamada.AreaArmazenagemLeitura == null)) ||
@@ -393,50 +439,16 @@ public class AtividadeService : IAtividadeService
                         leituraAlterada = true;
                     }
                 }
-                if ((!identificadorPallet.IsNullOrEmpty()) && (identificadorPallet != "0"))
-                {
-                    chamada.PalletLeitura = await SiagAPI.GetPalletByIdenfificadorAsync(identificadorPallet);
-
-                    if (chamada.PalletLeitura == null)
-                    {
-                        PalletModel pallet = new();
-
-                        try
-                        {
-                            pallet.IdPallet = Convert.ToInt32(identificadorPallet.Substring(3));
-                        }
-                        catch (Exception)
-                        {
-                            return new MensagemWebservice
-                            {
-                                Retorno = false,
-                                Mensagem = "Erro ao cadastrar o pallet " + identificadorPallet,
-                            };
-                        }
-                        pallet.FgStatus = StatusPallet.Livre;
-                        pallet.CdIdentificacao = identificadorPallet;
-                        pallet.QtUtilizacao = 0;
-                        await _palletRepository.Inserir(pallet);
-
-                        chamada.PalletLeitura = pallet;
-                    }
-                    // verifica se houve mudança na leitura da area
-                    if (((palletLeitura == null) && (chamada.PalletLeitura != null)) ||
-                        ((palletLeitura != null) && (chamada.PalletLeitura == null)) ||
-                        ((palletLeitura != null) && (!palletLeitura.IdPallet.Equals(chamada.PalletLeitura.IdPallet))))
-                    {
-                        leituraAlterada = true;
-                    }
-                }
 
                 //Procura tarefa da chamada pelo idTarefa
                 ChamadaTarefaModel? chamadaTarefa = null;
-                List<ChamadaTarefaModel> tarefas = await _chamadaRepository.ConsultarTarefas(chamada);
+                var tarefas = await _chamadaRepository.ConsultarTarefas(chamada);
+
                 if (idTarefa > 0)
                 {
-                    foreach (ChamadaTarefaModel tarefa in tarefas)
+                    foreach (var tarefa in tarefas)
                     {
-                        tarefa.Tarefa = await SiagAPI.GetAtividadeTarefaByIdAsync(tarefa.Tarefa.IdTarefa);
+                        tarefa.Tarefa = await SiagAPI.GetAtividadeTarefaByIdAsync(tarefa.IdTarefa);
 
                         if (tarefa.Tarefa.IdTarefa == Convert.ToInt32(idTarefa))
                         {
@@ -445,13 +457,10 @@ public class AtividadeService : IAtividadeService
                     }
                 }
 
-                if (chamadaTarefa != null)
+                if (chamadaTarefa != null && chamadaTarefa.Tarefa != null)
                 {
                     //Consulta atividade rotina a partir da atividade tarefa
-                    //AtividadeRotina atividadeRotina = new AtividadeRotina();
                     chamadaTarefa.Tarefa.AtividadeRotina = await SiagAPI.GetAtividadeRotinaByIdAsync(chamadaTarefa.Tarefa?.AtividadeRotina?.IdAtividadeRotina ?? 0);
-
-                    string mensagem = "";
 
                     //Salva leituras recebidas
                     await SiagAPI.AtualizarLeituraChamadaAsync(new()
@@ -463,7 +472,7 @@ public class AtividadeService : IAtividadeService
 
                     //A partir da atividade rotina consulta a stored procedure para que valide as leituras recebidas
                     // Ignora execução caso a data de fim da tarefa esteja preenchida, e não houve alteração na leitura
-                    var leituraValidada = _chamadaRepository.ValidaLeitura(chamada, chamadaTarefa.Tarefa.AtividadeRotina, out mensagem);
+                    var leituraValidada = _chamadaRepository.ValidaLeitura(chamada, chamadaTarefa.Tarefa.AtividadeRotina, out string mensagem);
 
                     if (((chamadaTarefa.DataFim != null) && (!leituraAlterada)) || leituraValidada)
                     {
@@ -481,7 +490,7 @@ public class AtividadeService : IAtividadeService
                                         string caracol = int.Parse(area.Substring(3, 3)).ToString();
                                         string gaiola = int.Parse(area.Substring(6, 2)).ToString();
 
-                                        string url = "http://gra-lxsobcaracol.sob.ad-grendene.com:1880/apagaluzvm/" + caracol + "/" + gaiola + "/";
+                                        string url = $"{nodeRedURL}/apagaluzvm/{caracol}/{gaiola}";
 
                                         try
                                         {
@@ -502,20 +511,18 @@ public class AtividadeService : IAtividadeService
                             await SiagAPI.InsertLogAsync(mensagemLog);
                         }
 
-                        //Edita chamadaTarefa colocando a data final da tarefa
                         chamadaTarefa.DataFim = DateTime.Now;
                         _chamadaRepository.EditarTarefa(chamadaTarefa);
 
-                        // atualiza data de movimentação do equipamento
-                        await SiagAPI.AtualizarEnderecoEquipamentoAsync(chamada.Equipamento?.IdEquipamento ?? 0);
-                        //_equipamentoRepository.Dispose();
+                        await SiagAPI.AtualizarEnderecoEquipamentoAsync(chamada.IdEquipamento);
 
                         //Só finalizar se todas as tarefas estiverem concluidas
-                        Boolean finalizarChamada = true;
-                        foreach (ChamadaTarefaModel item in tarefas)
+                        bool finalizarChamada = true;
+
+                        foreach (var tarefa in tarefas)
                         {
                             //se alguma tarefa não estiver finalizada retorna false
-                            if (item.DataFim == null)
+                            if (tarefa.DataFim == null)
                             {
                                 finalizarChamada = false;
                                 break;
@@ -525,26 +532,25 @@ public class AtividadeService : IAtividadeService
                         //se todas as taredas estiverem finalizadas edita chamada alterando status para finalizada (Isto poreria ser feito dentro do agendamento da proxima tarefa)
                         if (finalizarChamada)
                         {
-                            //altera status da chamada para finalizada e inicia as proximas chamadas que dependem desta
                             await SiagAPI.FinalizarChamadaAsync(chamada.IdChamada);
                         }
-                        // Executa próxima atividade automática (se houver)
                         else
                         {
                             bool executar = false;
-                            foreach (ChamadaTarefaModel item in tarefas)
+
+                            foreach (var tarefa in tarefas)
                             {
-                                if (item.Tarefa.IdTarefa == chamadaTarefa.Tarefa.IdTarefa)
+                                if (tarefa?.Tarefa?.IdTarefa == chamadaTarefa.Tarefa.IdTarefa)
                                 {
                                     executar = true;
                                 }
                                 else if (executar)
                                 {
-                                    if (item.Tarefa.FgRecurso == Recursos.Automatico)
+                                    if (tarefa?.Tarefa?.FgRecurso == Recursos.Automatico)
                                     {
-                                        await IniciarTarefa(chamada.IdChamada.ToString(), item.Tarefa.IdTarefa);
+                                        await IniciarTarefa(chamada.IdChamada.ToString(), tarefa.Tarefa.IdTarefa);
 
-                                        MensagemWebservice msg = await EfetivaLeitura("", "", chamada.IdChamada.ToString(), item.Tarefa.IdTarefa);
+                                        MensagemWebservice msg = await EfetivaLeitura("", "", chamada.IdChamada.ToString(), tarefa.Tarefa.IdTarefa);
 
                                         if (!msg.Retorno)
                                         {
@@ -556,49 +562,38 @@ public class AtividadeService : IAtividadeService
                             }
                         }
                         // Retorna mensagem para o cliente
-                        return new MensagemWebservice()
-                        {
-                            Retorno = true,
-                            Mensagem = mensagem
-                        };
+                        return FormatarMensagem(true, mensagem);
                     }
                     else
                     {
                         //Se leitura estiver inválida
-                        return new MensagemWebservice()
-                        {
-                            Retorno = false,
-                            Mensagem = mensagem
-                        };
+                        return FormatarMensagem(false, mensagem);
                     }
                 }
                 else
                 {
                     //se não achar id da tarefa
-                    return new MensagemWebservice()
-                    {
-                        Retorno = false,
-                        Mensagem = "Tarefa não encontrada"
-                    };
+                    return FormatarMensagem(false, "Tarefa não encontrada");
                 }
             }
             else
             {
                 //Retorna falso se tarefa já estiver rejeitada ou finalizada
-                return new MensagemWebservice()
-                {
-                    Retorno = true,
-                    Mensagem = ""
-                };
+                return FormatarMensagem(true, "");
             }
         }
         catch (Exception ex)
         {
-            return new MensagemWebservice()
-            {
-                Retorno = false,
-                Mensagem = ex.Message
-            };
+            return FormatarMensagem(false, ex.Message);
         }
+    }
+
+    private static MensagemWebservice FormatarMensagem(bool retorno, string mensagem)
+    {
+        return new MensagemWebservice()
+        {
+            Retorno = retorno,
+            Mensagem = mensagem
+        };
     }
 }
