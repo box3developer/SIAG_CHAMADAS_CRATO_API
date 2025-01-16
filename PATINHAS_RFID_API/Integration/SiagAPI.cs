@@ -512,21 +512,14 @@ public class SiagAPI
         {
             string url = $"{siagURL}/Equipamento/identificador/{identificador}";
 
-            var result = await client.GetFromJsonAsync<APIResultDTO<EquipamentoModel>>(url);
+            var response = await client.GetFromJsonAsync<APIResultDTO<EquipamentoModel>>(url);
 
-            if (result == null || result.Dados == null)
+            if (response == null || response.Dados == null)
             {
                 return null;
             }
 
-            var equipamento = result.Dados;
-
-            equipamento.EquipamentoModelo = new() { Codigo = equipamento.IdEquipamento };
-            equipamento.SetorTrabalho = new() { IdSetorTrabalho = equipamento.IdSetorTrabalho ?? 0 };
-            equipamento.Operador = new() { IdOperador = equipamento.IdOperador };
-            equipamento.Endereco = new() { IdEndereco = equipamento.IdEndereco ?? 0 };
-
-            return equipamento;
+            return response.Dados;
         }
         catch (Exception ex)
         {
