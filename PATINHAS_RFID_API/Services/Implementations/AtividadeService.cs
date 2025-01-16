@@ -20,38 +20,19 @@ namespace PATINHAS_RFID_API.Services.Implementations;
 public class AtividadeService : IAtividadeService
 {
     private readonly IEquipamentoRepository _equipamentoRepository;
-    private readonly IAtividadeRepository _atividadeRepository;
     private readonly IAtividadeTarefaRepository _atividadeTarefaRepository;
     private readonly IChamadaRepository _chamadaRepository;
-    private readonly IAreaRepository _areaRepository;
-    private readonly ILogRepository _logRepository;
-    private readonly IAtividadeRotinaRepository _atividadeRotinaRepository;
     private readonly IPalletRepository _palletRepository;
-    private readonly IChamadaTarefaRepository _chamadaTarefaRepository;
 
     private static readonly Dictionary<string, Queue<int>> chamadaFIFO = new();
-    private static readonly string nodeRedURL = "";
-    public AtividadeService(
-        IEquipamentoRepository equipamentoRepository,
-        IAtividadeRepository atividadeRepository,
-        IAtividadeTarefaRepository atividadeTarefaRepository,
-        IChamadaRepository chamadaRepository,
-        IAreaRepository areaRepository,
-        ILogRepository logRepository,
-        IAtividadeRotinaRepository atividadeRotinaRepository,
-        IPalletRepository palletRepository,
-        IChamadaTarefaRepository chamadaTarefaRepository
-        )
+    private static readonly string nodeRedURL = Global.NodeAPI;
+
+    public AtividadeService(IEquipamentoRepository equipamentoRepository, IAtividadeTarefaRepository atividadeTarefaRepository, IChamadaRepository chamadaRepository, IPalletRepository palletRepository)
     {
         _equipamentoRepository = equipamentoRepository;
-        _atividadeRepository = atividadeRepository;
         _atividadeTarefaRepository = atividadeTarefaRepository;
         _chamadaRepository = chamadaRepository;
-        _areaRepository = areaRepository;
-        _logRepository = logRepository;
-        _atividadeRotinaRepository = atividadeRotinaRepository;
         _palletRepository = palletRepository;
-        _chamadaTarefaRepository = chamadaTarefaRepository;
     }
 
     public async Task<List<ChamadaCompletaModel>?> SelecionaTarefa(SelecionarTarefaDTO selecionarTarefaDTO)
@@ -365,11 +346,7 @@ public class AtividadeService : IAtividadeService
 
             if (chamada == null)
             {
-                return new MensagemWebservice()
-                {
-                    Retorno = true,
-                    Mensagem = ""
-                };
+                return FormatarMensagem(true, "");
             }
 
             if (chamada.FgStatus != StatusChamada.Rejeitado && chamada.FgStatus != StatusChamada.Finalizado)
