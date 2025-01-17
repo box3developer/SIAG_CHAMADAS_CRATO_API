@@ -1,8 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using PATINHAS_RFID_API.Data;
 using PATINHAS_RFID_API.DTOs;
-using PATINHAS_RFID_API.Models;
-using PATINHAS_RFID_API.Models.EquipamentoCheckList;
 using PATINHAS_RFID_API.Services.Interfaces;
 
 namespace PATINHAS_RFID_API.Controllers;
@@ -68,35 +65,6 @@ public class EquipamentoController : ControllerBase
     {
         try
         {
-            var lista = new List<EquipamentoChecklistModel> {
-                new EquipamentoChecklistModel
-                {
-                    IdEquipamentoChecklist = 1,
-                    EquipamentoModelo = new EquipamentoModeloModel(),
-                    NmDescricao = "Verifique a carga da bateria",
-                    FgCritico = false,
-                    FgStatus = Status.Ativo
-                },
-                new EquipamentoChecklistModel
-                {
-                    IdEquipamentoChecklist = 2,
-                    EquipamentoModelo = new EquipamentoModeloModel(),
-                    NmDescricao = "Teste Número 2",
-                    FgCritico = false,
-                    FgStatus = Status.Ativo
-                },
-                new EquipamentoChecklistModel
-                {
-                    IdEquipamentoChecklist = 3,
-                    EquipamentoModelo = new EquipamentoModeloModel(),
-                    NmDescricao = "Teste Número 3",
-                    FgCritico = false,
-                    FgStatus = Status.Ativo
-                },
-            };
-
-            //return Ok(lista);
-
             var result = await _equipamentoService.GetCheckList(identificadorEquipamento);
 
             return Ok(result);
@@ -112,8 +80,6 @@ public class EquipamentoController : ControllerBase
     {
         try
         {
-            //return Ok(true);
-
             var result = await _equipamentoService.SetCheckList(setCheckListDTO);
 
             return Ok(result);

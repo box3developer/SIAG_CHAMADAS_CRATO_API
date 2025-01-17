@@ -2,36 +2,14 @@
 using PATINHAS_RFID_API.Models;
 using PATINHAS_RFID_API.Repositories.Interfaces;
 
-namespace PATINHAS_RFID_API.Repositories.Implementations
+namespace PATINHAS_RFID_API.Repositories.Implementations;
+
+public class CheckListOperadorRepository : ICheckListOperadorRepository
 {
-    public class CheckListOperadorRepository : ICheckListOperadorRepository
+    public async Task<bool> Inserir(EquipamentoChecklistOperadorModel checklistOperador)
     {
-        const string sqlSelect = "SELECT id_equipamento, id_operador, id_equipamentochecklist, fg_resposta, dt_checklist FROM equipamentochecklistoperador  with(NOLOCK) WHERE 1 = 1 ";
-        const string sqlInsert = "INSERT INTO equipamentochecklistoperador (id_equipamento, id_operador, id_equipamentochecklist, fg_resposta, dt_checklist) VALUES (@Equipamento, @Operador, @Checklist, @Resposta, @Data)";
+        await SiagAPI.InsertChecklistOperadorAsync(checklistOperador);
 
-        public async Task<bool> Inserir(EquipamentoChecklistOperadorModel checklistOperador)
-        {
-            checklistOperador.IdEquipamentoChecklist = checklistOperador.Checklist?.IdEquipamentoChecklist ?? 0;
-            checklistOperador.IdEquipamento = checklistOperador.Equipamento?.IdEquipamento ?? 0;
-            checklistOperador.IdOperador = checklistOperador.Operador?.IdOperador ?? 0;
-
-            await SiagAPI.InsertChecklistOperadorAsync(checklistOperador);
-
-            return true;
-
-            //using (var conexao = new SqlConnection(Global.Conexao))
-            //{
-            //    var qtdLinhas = await conexao.ExecuteAsync(sqlInsert, new
-            //    {
-            //        Equipamento = checklistOperador.Equipamento.IdEquipamento,
-            //        Operador = checklistOperador.Operador.IdOperador,
-            //        Checklist = checklistOperador.Checklist.IdEquipamentoChecklist,
-            //        Resposta = checklistOperador.FgResposta,
-            //        Data = checklistOperador.DtChecklist,
-            //    });
-
-            //    return qtdLinhas > 0;
-            //}
-        }
+        return true;
     }
 }

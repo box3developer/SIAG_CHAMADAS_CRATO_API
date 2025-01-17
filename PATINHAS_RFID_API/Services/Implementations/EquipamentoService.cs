@@ -4,7 +4,6 @@ using PATINHAS_RFID_API.DTOs;
 using PATINHAS_RFID_API.Integration;
 using PATINHAS_RFID_API.Models;
 using PATINHAS_RFID_API.Models.AreaArmazenagem;
-using PATINHAS_RFID_API.Models.Equipamento;
 using PATINHAS_RFID_API.Models.EquipamentoCheckList;
 using PATINHAS_RFID_API.Models.Operador;
 using PATINHAS_RFID_API.Repositories.Interfaces;
@@ -72,9 +71,21 @@ public class EquipamentoService : IEquipamentoService
     public async Task<bool> EnviaLocalizacaoEquipamento(string macEquipamento, string retornoEquipamento)
     {
         var equipamento = await _equipamentoRepository.GetByIdentificador(macEquipamento);
-        equipamento.SetorTrabalho = await SiagAPI.GetSetorByIdAsync(equipamento.SetorTrabalho?.IdSetorTrabalho ?? 0);
+
+        if (equipamento == null)
+        {
+            return false;
+        }
+
+        equipamento.SetorTrabalho = await SiagAPI.GetSetorByIdAsync(equipamento.IdSetorTrabalho ?? 0);
+
+        if (equipamento.SetorTrabalho == null)
+        {
+            return false;
+        }
 
         var mAreaArmazenagem = string.Concat(equipamento.SetorTrabalho.IdSetorTrabalho.ToString(), retornoEquipamento.AsSpan(0, 5), "01", retornoEquipamento.AsSpan(5, 1));
+
         var areaArmazenagem = new AreaArmazenagemModel
         {
             IdAreaArmazenagem = Convert.ToInt64(mAreaArmazenagem)
@@ -84,7 +95,7 @@ public class EquipamentoService : IEquipamentoService
 
         if (areaArmazenagem != null)
         {
-            await SiagAPI.AtualizarEnderecoEquipamentoAsync(equipamento.IdEquipamento, areaArmazenagem.Endereco?.IdEndereco);
+            await SiagAPI.AtualizarEnderecoEquipamentoAsync(equipamento.IdEquipamento, areaArmazenagem.IdEndereco);
         }
 
         return true;
@@ -92,52 +103,52 @@ public class EquipamentoService : IEquipamentoService
 
     public async Task<List<EquipamentoChecklistModel>> GetCheckList(string identificadorEquipamento)
     {
-        EquipamentoModel equipamento = new EquipamentoModel();
-        equipamento.NmIdentificador = identificadorEquipamento;
+        var checklists = await SiagAPI.GetEquipamentosChecklistAsync(identificadorEquipamento);
 
-        List<EquipamentoChecklistModel> lstChecklist = await SiagAPI.GetEquipamentosChecklistAsync(equipamento.NmIdentificador);
-
-        return lstChecklist;
+        return checklists;
     }
 
     public async Task<bool> SetCheckList(SetCheckListDTO setCheckListDTO)
     {
-        EquipamentoModel equipamento = new EquipamentoModel();
-        equipamento.NmIdentificador = setCheckListDTO.IdentificadorEquipamento;
+        var equipamento = await _equipamentoRepository.GetByIdentificador(setCheckListDTO.IdentificadorEquipamento);
 
-        //Busca equipamento pelo identificador
-        //List<EquipamentoModel> lstEquipamento = await _equipamentoRepository.ConsultarLista(equipamento);
-        //Utiliza somente a primeira posição pois identificador é único na tabela Equipamento
-        //equipamento = lstEquipamento[0];
+        OperadorModel operador = new()
+        {
+            IdOperador = setCheckListDTO.CodOperador
+        };
 
-        equipamento = await _equipamentoRepository.GetByIdentificador(equipamento.NmIdentificador);
+        if (string.IsNullOrEmpty(setCheckListDTO.ChecklistResponse))
+        {
+            return false;
+        }
 
-        OperadorModel operador = new OperadorModel();
-        operador.IdOperador = setCheckListDTO.CodOperador;
-        //Deserializa JSon como uma lista de dicionários, cada dicionário com código do checklist e valor da resposta (0 ou 1)
-        List<Dictionary<string, string>> lstChecklistGenerico = JsonSerializer.Deserialize<List<Dictionary<string, string>>>(setCheckListDTO.ChecklistResponse);
+        var listChecklistGenerico = JsonSerializer.Deserialize<List<Dictionary<string, string>>>(setCheckListDTO.ChecklistResponse) ?? new();
 
-        foreach (Dictionary<string, string> dicionario in lstChecklistGenerico)
+        foreach (var dicionario in listChecklistGenerico)
         {
             foreach (var item in dicionario)
             {
-                EquipamentoChecklistModel checklist = new EquipamentoChecklistModel();
-                checklist.IdEquipamentoChecklist = Convert.ToInt32(item.Key);
+                EquipamentoChecklistModel checklist = new()
+                {
+                    IdEquipamentoChecklist = Convert.ToInt32(item.Key)
+                };
 
-                //Monta objeto ChecklistOperador
-                EquipamentoChecklistOperadorModel checklistOperador = new EquipamentoChecklistOperadorModel();
-                checklistOperador.Equipamento = equipamento;
-                checklistOperador.Operador = operador;
-                checklistOperador.Checklist = checklist;
-                checklistOperador.FgResposta = Convert.ToBoolean(int.Parse(item.Value));
-                checklistOperador.DtChecklist = DateTime.Now;
+                EquipamentoChecklistOperadorModel checklistOperador = new()
+                {
+                    Equipamento = equipamento,
+                    IdEquipamento = equipamento?.IdEquipamento ?? 0,
+                    Operador = operador,
+                    IdOperador = operador?.IdOperador ?? 0,
+                    Checklist = checklist,
+                    IdEquipamentoChecklist = checklist.IdEquipamentoChecklist,
+                    FgResposta = Convert.ToBoolean(int.Parse(item.Value)),
+                    DtChecklist = DateTime.Now
+                };
 
-                //Insere cada resposta na tabela EquipamentoChecklistOperador
-                _checkListOperadorRepository.Inserir(checklistOperador);
+                await _checkListOperadorRepository.Inserir(checklistOperador);
             }
         }
 
         return true;
     }
-
 }
