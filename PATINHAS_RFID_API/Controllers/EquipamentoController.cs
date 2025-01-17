@@ -38,8 +38,6 @@ public class EquipamentoController : ControllerBase
     {
         try
         {
-            //return Ok(1);
-
             var result = await _equipamentoService.ConsultarPerformance(cracha);
 
             return Ok(result);

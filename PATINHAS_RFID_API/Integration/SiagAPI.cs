@@ -664,6 +664,27 @@ public class SiagAPI
         }
     }
 
+    public static async Task<int> GetOperadorPerformance(long idOperador)
+    {
+        try
+        {
+            string url = $"{siagURL}/Operador/{idOperador}/performance";
+
+            var result = await client.GetFromJsonAsync<APIResultDTO<int>>(url);
+
+            if (result == null)
+            {
+                return 0;
+            }
+
+            return result.Dados;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.Message);
+        }
+    }
+
 
     /** Setor **/
     public static async Task<SetorModel?> GetSetorByIdAsync(int id)

@@ -1,7 +1,4 @@
-﻿using System.Data;
-using System.Text.Json;
-using Dapper;
-using Microsoft.Data.SqlClient;
+﻿using System.Text.Json;
 using PATINHAS_RFID_API.Data;
 using PATINHAS_RFID_API.DTOs;
 using PATINHAS_RFID_API.Integration;
@@ -69,29 +66,7 @@ public class EquipamentoService : IEquipamentoService
             throw new Exception("Operador não informado");
         }
 
-        var filtros = new Dictionary<string, object>();
-        filtros.Add("@idOperador", cracha);
-
-        var parametros = new DynamicParameters(filtros);
-        parametros.Add("@performance", dbType: DbType.Int32, direction: ParameterDirection.Output);
-
-        var query = "EXEC sp_siag_performanceonline @idOperador, @performance output";
-
-        using (var conexao = new SqlConnection(Global.Conexao))
-        {
-            var linhas = await conexao.ExecuteAsync(query, parametros);
-        }
-
-        Int32? parPerformance = parametros.Get<Int32?>("@performance");
-
-        if (parPerformance.Value == null)
-        {
-            return (int)HumorEficiencia.Feliz;
-        }
-        else
-        {
-            return (int)parPerformance.Value;
-        }
+        return await SiagAPI.GetOperadorPerformance(cracha);
     }
 
     public async Task<bool> EnviaLocalizacaoEquipamento(string macEquipamento, string retornoEquipamento)
