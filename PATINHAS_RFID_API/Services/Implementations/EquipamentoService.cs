@@ -14,25 +14,11 @@ namespace PATINHAS_RFID_API.Services.Implementations;
 public class EquipamentoService : IEquipamentoService
 {
     private readonly IEquipamentoRepository _equipamentoRepository;
-    private readonly IAtividadeRejeicaoRepository _atividadeRepository;
-    private readonly IAreaArmazenagemRepository _areaArmazenagemRepository;
-    private readonly ISetorRepository _setorRepository;
-    private readonly ICheckListRepository _checkListRepository;
     private readonly ICheckListOperadorRepository _checkListOperadorRepository;
 
-    public EquipamentoService(
-        IEquipamentoRepository equipamentoRepository,
-        IAtividadeRejeicaoRepository atividadeRepository,
-        IAreaArmazenagemRepository areaArmazenagemRepository,
-        ISetorRepository setorRepository,
-        ICheckListRepository checkListRepository,
-        ICheckListOperadorRepository checkListOperadorRepository)
+    public EquipamentoService(IEquipamentoRepository equipamentoRepository, ICheckListOperadorRepository checkListOperadorRepository)
     {
         _equipamentoRepository = equipamentoRepository;
-        _atividadeRepository = atividadeRepository;
-        _areaArmazenagemRepository = areaArmazenagemRepository;
-        _setorRepository = setorRepository;
-        _checkListRepository = checkListRepository;
         _checkListOperadorRepository = checkListOperadorRepository;
     }
 

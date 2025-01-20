@@ -1,5 +1,4 @@
-﻿using dotnet_api.Utils;
-using Microsoft.IdentityModel.Tokens;
+﻿using Microsoft.IdentityModel.Tokens;
 using PATINHAS_RFID_API.Data;
 using PATINHAS_RFID_API.DTOs;
 using PATINHAS_RFID_API.Integration;
@@ -25,7 +24,6 @@ public class AtividadeService : IAtividadeService
     private readonly IPalletRepository _palletRepository;
 
     private static readonly Dictionary<string, Queue<int>> chamadaFIFO = new();
-    private static readonly string nodeRedURL = Global.NodeAPI;
 
     public AtividadeService(IEquipamentoRepository equipamentoRepository, IAtividadeTarefaRepository atividadeTarefaRepository, IChamadaRepository chamadaRepository, IPalletRepository palletRepository)
     {
@@ -464,14 +462,12 @@ public class AtividadeService : IAtividadeService
 
                                     if (area.Length == 9)
                                     {
-                                        string caracol = int.Parse(area.Substring(3, 3)).ToString();
-                                        string gaiola = int.Parse(area.Substring(6, 2)).ToString();
-
-                                        string url = $"{nodeRedURL}/apagaluzvm/{caracol}/{gaiola}";
+                                        var caracol = int.Parse(area.Substring(3, 3));
+                                        var gaiola = int.Parse(area.Substring(6, 2));
 
                                         try
                                         {
-                                            await WebRequestUtil.GetRequest(url);
+                                            await SiagAPI.ApagarLuzVermelha(caracol, gaiola);
                                         }
                                         catch (Exception ex)
                                         {

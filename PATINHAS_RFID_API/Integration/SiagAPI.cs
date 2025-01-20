@@ -2,6 +2,7 @@
 using PATINHAS_RFID_API.DTOs;
 using PATINHAS_RFID_API.DTOs.Chamada;
 using PATINHAS_RFID_API.DTOs.Equipamento;
+using PATINHAS_RFID_API.DTOs.Luzes;
 using PATINHAS_RFID_API.DTOs.Operador;
 using PATINHAS_RFID_API.DTOs.Pallet;
 using PATINHAS_RFID_API.Models;
@@ -117,9 +118,14 @@ public class SiagAPI
         {
             string url = $"{siagURL}/AtividadeRotina/{id}";
 
-            var atividade = await client.GetFromJsonAsync<AtividadeRotinaModel>(url);
+            var response = await client.GetFromJsonAsync<APIResultDTO<AtividadeRotinaModel>>(url);
 
-            return atividade ?? new();
+            if (response == null || response.Dados == null)
+            {
+                return new();
+            }
+
+            return response.Dados;
         }
         catch (Exception ex)
         {
@@ -135,9 +141,14 @@ public class SiagAPI
         {
             string url = $"{siagURL}/AtividadeTarefa/{id}";
 
-            var atividade = await client.GetFromJsonAsync<AtividadeTarefaModel>(url);
+            var response = await client.GetFromJsonAsync<APIResultDTO<AtividadeTarefaModel>>(url);
 
-            return atividade ?? new();
+            if (response == null || response.Dados == null)
+            {
+                return new();
+            }
+
+            return response.Dados;
         }
         catch (Exception ex)
         {
@@ -349,9 +360,14 @@ public class SiagAPI
         {
             string url = $"{siagURL}/Pallet/{id}";
 
-            var pallet = await client.GetFromJsonAsync<PalletModel>(url);
+            var response = await client.GetFromJsonAsync<APIResultDTO<PalletModel>>(url);
 
-            return pallet;
+            if (response == null || response.Dados == null)
+            {
+                return null;
+            }
+
+            return response.Dados;
         }
         catch (Exception ex)
         {
@@ -387,9 +403,14 @@ public class SiagAPI
                 IdPallet = id,
             });
 
-            var pallet = await response.Content.ReadFromJsonAsync<PalletModel>();
+            var json = await response.Content.ReadFromJsonAsync<APIResultDTO<PalletModel>>();
 
-            return pallet;
+            if (json == null || json.Dados == null)
+            {
+                return null;
+            }
+
+            return json.Dados;
         }
         catch (Exception ex)
         {
@@ -693,9 +714,36 @@ public class SiagAPI
         {
             string url = $"{siagURL}/Setor/{id}";
 
-            var setor = await client.GetFromJsonAsync<SetorModel>(url);
+            var response = await client.GetFromJsonAsync<APIResultDTO<SetorModel>>(url);
 
-            return setor;
+            if (response == null || response.Dados == null)
+            {
+                return null;
+            }
+
+            return response.Dados;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.Message);
+        }
+    }
+
+
+    /** Luzes **/
+    public static async Task<bool> ApagarLuzVermelha(int caracol, int gaiola)
+    {
+        try
+        {
+            string url = $"{siagURL}/Luzes/luzVermelha/desligar";
+
+            var response = await client.PostAsJsonAsync<LuzesFiltroDTO>(url, new()
+            {
+                Caracol = caracol,
+                Gaiola = gaiola
+            });
+
+            return true;
         }
         catch (Exception ex)
         {

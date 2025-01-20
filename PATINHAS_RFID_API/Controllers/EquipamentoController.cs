@@ -30,7 +30,7 @@ public class EquipamentoController : ControllerBase
         }
     }
 
-    [HttpGet("ConsultarPerformance/{codOperador}")]
+    [HttpGet("ConsultarPerformance/{cracha}")]
     public async Task<ActionResult> ConsultarPerformance(long cracha)
     {
         try
