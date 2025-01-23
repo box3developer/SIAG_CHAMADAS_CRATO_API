@@ -1,5 +1,4 @@
 ﻿using System.Data;
-using System.Reflection;
 using Dapper;
 using Microsoft.Data.SqlClient;
 using PATINHAS_RFID_API.Data;
@@ -181,20 +180,13 @@ public class ChamadaRepository : IChamadaRepository
 
     public async Task<List<ChamadaTarefaModel>> ConsultarTarefas(ChamadaModel? chamada = null)
     {
-        ChamadaTarefaModel chamadaTarefa = new ChamadaTarefaModel();
-        chamadaTarefa.Chamada = chamada;
+        ChamadaTarefaModel chamadaTarefa = new()
+        {
+            Chamada = chamada,
+            IdChamada = chamada?.IdChamada ?? Guid.Empty,
+        };
 
         return await _chamadaTarefaRepository.ConsultarLista(chamadaTarefa);
-    }
-
-    private static bool ValidaObjeto(object obj)
-    {
-        if (obj != null)
-        {
-            PropertyInfo Propriedade = obj.GetType().GetProperty("Codigo");
-            return (!Propriedade.GetValue(obj).ToString().Equals("0"));
-        }
-        return false;
     }
 
     public async Task<bool> AtualizaLeitura(ChamadaModel chamada)
@@ -234,6 +226,17 @@ public class ChamadaRepository : IChamadaRepository
 
     public bool ValidaLeitura(ChamadaModel chamada, AtividadeRotinaModel atividadeRotina, out string mensagem)
     {
+        var response = SiagAPI.ValidaChamadaAsync(chamada, atividadeRotina).Result;
+
+        if (response == null)
+        {
+            mensagem = "Não foi possivel realizar a validação da leitura!";
+            return false;
+        }
+
+        mensagem = response.Mensagem;
+        return response.Valido;
+
         if (atividadeRotina.FgTipo == TipoRotina.MetodoClasse)
         {
             MensagemWebservice? msg = (MensagemWebservice)typeof(IChamadaAtivaRepository).GetMethod(atividadeRotina.NmProcedure).Invoke(_chamadaTarefaRepository, new[] { chamada });

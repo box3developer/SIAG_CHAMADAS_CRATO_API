@@ -7,8 +7,8 @@ public class ChamadaTarefaModel
 {
     public int IdTarefa { get; set; }
     public AtividadeTarefaModel? Tarefa { get; set; }
-    public Guid ChamadaId { get; set; }
+    public Guid IdChamada { get; set; }
     public ChamadaModel? Chamada { get; set; }
-    public DateTime? DataInicio { get; set; }
-    public DateTime? DataFim { get; set; }
+    public DateTime? DtInicio { get; set; }
+    public DateTime? DtFim { get; set; }
 }

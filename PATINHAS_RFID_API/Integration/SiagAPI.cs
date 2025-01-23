@@ -352,6 +352,33 @@ public class SiagAPI
         }
     }
 
+    public static async Task<ValidaLeituraChamadaRetornoDTO?> ValidaChamadaAsync(ChamadaModel chamada, AtividadeRotinaModel atividadeRotina)
+    {
+        try
+        {
+            string url = $"{siagURL}/Chamada/valida-leitura";
+
+            var response = await client.PostAsJsonAsync<ValidaLeituraChamadaDTO>(url, new()
+            {
+                AtividadeRotina = atividadeRotina,
+                Chamada = chamada
+            });
+
+            var responseJson = await response.Content.ReadFromJsonAsync<APIResultDTO<ValidaLeituraChamadaRetornoDTO>>();
+
+            if (responseJson == null || responseJson.Dados == null)
+            {
+                return null;
+            }
+
+            return responseJson.Dados;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.Message);
+        }
+    }
+
 
     /** Pallet **/
     public static async Task<PalletModel?> GetPalletByIdAsync(int id)
@@ -395,7 +422,7 @@ public class SiagAPI
     {
         try
         {
-            string url = $"{siagURL}/identificador";
+            string url = $"{siagURL}/pallet/identificador";
 
             var response = await client.PostAsJsonAsync<PalletFiltroDTO>(url, new()
             {

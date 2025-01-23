@@ -270,7 +270,7 @@ public class AtividadeService : IAtividadeService
         {
             Chamada = chamada,
             Tarefa = atividadeTarefa,
-            DataInicio = DateTime.Now
+            DtInicio = DateTime.Now
         };
 
         await SiagAPI.UpdateChamadaTarefaAsync(chamadaTarefa);
@@ -449,7 +449,7 @@ public class AtividadeService : IAtividadeService
                     // Ignora execução caso a data de fim da tarefa esteja preenchida, e não houve alteração na leitura
                     var leituraValidada = _chamadaRepository.ValidaLeitura(chamada, chamadaTarefa.Tarefa.AtividadeRotina, out string mensagem);
 
-                    if (((chamadaTarefa.DataFim != null) && (!leituraAlterada)) || leituraValidada)
+                    if (((chamadaTarefa.DtFim != null) && (!leituraAlterada)) || leituraValidada)
                     {
                         //PROCESSO PARA APAGAR LUZ DO CARACOL USANDO API DO NODERED -- O GURGEL QUE MANDOU
                         try
@@ -484,7 +484,7 @@ public class AtividadeService : IAtividadeService
                             await SiagAPI.InsertLogAsync(mensagemLog);
                         }
 
-                        chamadaTarefa.DataFim = DateTime.Now;
+                        chamadaTarefa.DtFim = DateTime.Now;
                         _chamadaRepository.EditarTarefa(chamadaTarefa);
 
                         await SiagAPI.AtualizarEnderecoEquipamentoAsync(chamada.IdEquipamento);
@@ -495,7 +495,7 @@ public class AtividadeService : IAtividadeService
                         foreach (var tarefa in tarefas)
                         {
                             //se alguma tarefa não estiver finalizada retorna false
-                            if (tarefa.DataFim == null)
+                            if (tarefa.DtFim == null)
                             {
                                 finalizarChamada = false;
                                 break;
