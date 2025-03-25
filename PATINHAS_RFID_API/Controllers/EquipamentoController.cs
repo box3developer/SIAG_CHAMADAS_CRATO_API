@@ -1,12 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using PATINHAS_RFID_API.DTOs;
 using PATINHAS_RFID_API.Services.Interfaces;
+using SIAG_CADASTRO_API.Util;
+using System.Diagnostics;
 
 namespace PATINHAS_RFID_API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class EquipamentoController : ControllerBase
+public class EquipamentoController : ControllerCustom
 {
     private readonly IEquipamentoService _equipamentoService;
 
@@ -22,11 +24,11 @@ public class EquipamentoController : ControllerBase
         {
             var result = await _equipamentoService.ConsultarConfiguracoes(cracha, identificadorEquipamento);
 
-            return Ok(result);
+            return OkResponse(result);
         }
         catch (Exception ex)
         {
-            return BadRequest(ex.Message);
+            return HandleException(ex);
         }
     }
 
@@ -37,11 +39,11 @@ public class EquipamentoController : ControllerBase
         {
             var result = await _equipamentoService.ConsultarPerformance(cracha);
 
-            return Ok(result);
+            return OkResponse(result);
         }
         catch (Exception ex)
         {
-            return BadRequest(ex.Message);
+            return HandleException(ex);
         }
     }
 
@@ -52,11 +54,11 @@ public class EquipamentoController : ControllerBase
         {
             var result = await _equipamentoService.EnviaLocalizacaoEquipamento(macEquipamento, retornoEquipamento);
 
-            return Ok(result);
+            return OkResponse(result);
         }
         catch (Exception ex)
         {
-            return BadRequest(ex.Message);
+            return HandleException(ex);
         }
     }
 
@@ -67,11 +69,11 @@ public class EquipamentoController : ControllerBase
         {
             var result = await _equipamentoService.GetCheckList(identificadorEquipamento);
 
-            return Ok(result);
+            return OkResponse(result);
         }
         catch (Exception ex)
         {
-            return BadRequest(ex.Message);
+            return HandleException(ex);
         }
     }
 
@@ -82,11 +84,11 @@ public class EquipamentoController : ControllerBase
         {
             var result = await _equipamentoService.SetCheckList(setCheckListDTO);
 
-            return Ok(result);
+            return OkResponse(result);
         }
         catch (Exception ex)
         {
-            return BadRequest(ex.Message);
+            return HandleException(ex);
         }
     }
 
@@ -95,11 +97,39 @@ public class EquipamentoController : ControllerBase
     {
         try
         {
-            return Ok(true);
+            return OkResponse(true);
         }
         catch (Exception ex)
         {
-            return BadRequest(ex.Message);
+            return HandleException(ex);
+        }
+    }
+
+    [HttpGet("Reiniciar")]
+    public ActionResult Reiniciar()
+    {
+        try
+        {
+            Process.Start("shutdown", "-r -t 0");
+            return OkResponse(true);
+        }
+        catch (Exception ex)
+        {
+            return HandleException(ex);
+        }
+    }
+
+    [HttpGet("Desligar")]
+    public ActionResult Desligar()
+    {
+        try
+        {
+            Process.Start("shutdown", "-s -t 0");
+            return OkResponse(true);
+        }
+        catch (Exception ex)
+        {
+            return HandleException(ex);
         }
     }
 }

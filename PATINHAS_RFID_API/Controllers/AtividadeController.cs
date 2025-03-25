@@ -1,12 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using PATINHAS_RFID_API.DTOs;
 using PATINHAS_RFID_API.Services.Interfaces;
+using SIAG_CADASTRO_API.Util;
 
 namespace PATINHAS_RFID_API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class AtividadeController : ControllerBase
+public class AtividadeController : ControllerCustom
 {
     private readonly IAtividadeService _atividadeService;
 
@@ -24,11 +25,11 @@ public class AtividadeController : ControllerBase
 
             var response = await _atividadeService.SelecionaTarefa(selecionarTarefaDTO);
 
-            return Ok(response);
+            return OkResponse(response);
         }
         catch (Exception ex)
         {
-            return BadRequest(ex.Message);
+            return HandleException(ex);
         }
     }
 
@@ -39,11 +40,11 @@ public class AtividadeController : ControllerBase
         {
             var response = await _atividadeService.SelecionaTarefa(selecionaTarefaDTO);
 
-            return Ok(response);
+            return OkResponse(response);
         }
         catch (Exception ex)
         {
-            return BadRequest(ex.Message);
+            return HandleException(ex);
         }
     }
 
@@ -54,11 +55,11 @@ public class AtividadeController : ControllerBase
         {
             var response = await _atividadeService.IniciarTarefa(idChamada, idTarefa);
 
-            return Ok(response);
+            return OkResponse(response);
         }
         catch (Exception ex)
         {
-            return BadRequest(ex.Message);
+            return HandleException(ex);
         }
     }
 
@@ -69,11 +70,11 @@ public class AtividadeController : ControllerBase
         {
             var response = await _atividadeService.RejeitarTarefa(Cracha, idMotivo, idChamada);
 
-            return Ok(response);
+            return OkResponse(response);
         }
         catch (Exception ex)
         {
-            return BadRequest(ex.Message);
+            return HandleException(ex);
         }
     }
 
@@ -84,11 +85,11 @@ public class AtividadeController : ControllerBase
         {
             var response = await _atividadeService.EfetivaLeitura(identificadorPallet, identificadorAreaArmazenagem, idChamada, idTarefa);
 
-            return Ok(response);
+            return OkResponse(response);
         }
         catch (Exception ex)
         {
-            return BadRequest(ex.Message);
+            return HandleException(ex);
         }
     }
 }
